@@ -1,0 +1,12 @@
+<div class="crypto-card">
+  <img [src]="crypto.image" [alt]="crypto.name" />
+  <h3>{{ crypto.name }}</h3>
+  <p class="price">${{ crypto.current_price | number : '1.2-2' }}</p>
+  <p
+    [class.positive]="crypto.price_change_percentage_24h > 0"
+    [class.negative]="crypto.price_change_percentage_24h < 0"
+  >
+    {{ crypto.price_change_percentage_24h | numberSign }}%
+  </p>
+  <small>Rank #{{ crypto.market_cap_rank }}</small>
+</div>

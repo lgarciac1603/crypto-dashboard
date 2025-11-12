@@ -1,0 +1,6 @@
+<section class="dashboard">
+  <h2>Top Cryptocurrencies</h2>
+  <div class="grid">
+    <app-crypto-card *ngFor="let c of cryptos" [crypto]="c"></app-crypto-card>
+  </div>
+</section>
