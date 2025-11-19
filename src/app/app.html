@@ -64,6 +64,14 @@
             <span class="fav-price"
               >{{ getCurrencySymbol() }}{{ crypto.current_price | number : '1.2-2' }}</span
             >
+            <span
+              class="fav-change"
+              [class.positive]="crypto.price_change_percentage_24h > 0"
+              [class.negative]="crypto.price_change_percentage_24h < 0"
+            >
+              {{ crypto.price_change_percentage_24h > 0 ? '+' : ''
+              }}{{ crypto.price_change_percentage_24h | number : '1.2-2' }}%
+            </span>
           </div>
         </div>
         } @empty {
@@ -80,9 +88,14 @@
           <img [src]="currency.image" [alt]="currency.name" />
           <div class="fav-info">
             <span class="fav-name">{{ currency.symbol | uppercase }}</span>
-            <span class="fav-price"
-              >{{ getCurrencySymbol() }}{{ currency.current_price | number : '1.2-2' }}</span
+            <span class="fav-price">{{ getCurrencySymbol() }}{{ currency.current_price | number : '1.2-2' }}</span>
+            <span 
+              class="fav-change"
+              [class.positive]="currency.price_change_percentage_24h > 0"
+              [class.negative]="currency.price_change_percentage_24h < 0"
             >
+              {{ currency.price_change_percentage_24h > 0 ? '+' : '' }}{{ currency.price_change_percentage_24h | number : '1.2-2' }}%
+            </span>
           </div>
         </div>
         } @empty {

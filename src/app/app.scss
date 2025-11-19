@@ -181,6 +181,20 @@
           color: var(--text-secondary);
           font-size: 0.85rem;
         }
+
+        .fav-change {
+          font-size: 0.75rem;
+          font-weight: 600;
+          margin-top: 2px;
+
+          &.positive {
+            color: #10b981; // Green for gains
+          }
+
+          &.negative {
+            color: #ef4444; // Red for losses
+          }
+        }
       }
 
       &:hover {
