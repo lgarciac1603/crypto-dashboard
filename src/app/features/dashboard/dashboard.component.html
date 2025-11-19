@@ -1,5 +1,8 @@
 <section class="dashboard">
-  <h2>Top Cryptocurrencies</h2>
+  <div class="dashboard-header">
+    <h2>Top Cryptocurrencies</h2>
+    <p class="subtitle">Live market data and trending coins</p>
+  </div>
   <div class="grid">
     <app-crypto-card *ngFor="let c of cryptos" [crypto]="c"></app-crypto-card>
   </div>

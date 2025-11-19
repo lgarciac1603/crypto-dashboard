@@ -1,11 +1,73 @@
-<header class="app-header">
-  <h1>💰 Crypto Dashboard</h1>
-</header>
+<div class="app-container">
+  <!-- Top App Bar -->
+  <header class="app-bar">
+    <div class="app-bar-left">
+      <h1 class="logo">
+        <span class="accent-text">CRYPTO</span>
+        <span class="accent-text-alt">PULSE</span>
+      </h1>
+    </div>
+    <div class="app-bar-right">
+      @if (isLoggedIn) {
+        <div class="user-info">
+          <img [src]="userAvatar" alt="User" class="user-avatar" />
+          <span class="user-name">{{ userName }}</span>
+          <button class="btn-icon" (click)="logout()">
+            <span>🚪</span>
+          </button>
+        </div>
+      } @else {
+        <button class="btn-login" (click)="login()">
+          <span>Login</span>
+        </button>
+      }
+    </div>
+  </header>
 
-<main class="app-content">
-  <router-outlet></router-outlet>
-</main>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">User</h3>
+      <div class="user-section">
+        @if (isLoggedIn) {
+          <div class="user-card">
+            <img [src]="userAvatar" alt="Avatar" />
+            <p>{{ userName }}</p>
+          </div>
+        } @else {
+          <button class="btn-sidebar" (click)="login()">Login</button>
+        }
+      </div>
+    </div>
 
-<footer class="app-footer">
-  <p>Powered by CoinGecko API</p>
-</footer>
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Favorites ⭐</h3>
+      <div class="favorites-list">
+        @for (fav of favorites; track fav.id) {
+          <div class="favorite-item" (click)="selectCrypto(fav)">
+            <img [src]="fav.image" [alt]="fav.name" />
+            <div class="fav-info">
+              <span class="fav-name">{{ fav.symbol | uppercase }}</span>
+              <span class="fav-price">${{ fav.current_price | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty-message">No favorites yet</p>
+        }
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      @if (isLoggedIn) {
+        <button class="btn-sidebar btn-logout" (click)="logout()">
+          <span>🚪</span> Logout
+        </button>
+      }
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
