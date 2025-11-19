@@ -48,15 +48,18 @@ export class CryptoDetail implements OnInit, OnDestroy {
       this.loadChartData(cryptoId, '1'); // Load initial chart
     });
 
-    // Auto-refresh every 60 seconds (increased from 30 to reduce API calls)
-    interval(60000)
+    // Auto-refresh disabled - cache handles data freshness
+    // Uncomment below if you want periodic refresh (not recommended with cache)
+    /*
+    interval(120000) // 2 minutes
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
         this.loadCryptoData(cryptoId);
       });
+    */
 
-    // Subscribe to currency changes - reload data when currency changes
+    // Subscribe to currency changes - cache is cleared automatically
     this.currencyService.selectedCurrency$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
       this.loadCryptoData(cryptoId);

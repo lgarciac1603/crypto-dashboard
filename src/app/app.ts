@@ -1,19 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterOutlet, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Store } from '@ngrx/store';
+import { Subject, takeUntil, switchMap } from 'rxjs';
 import { Crypto } from './core/models/crypto.model';
-import { PriceService } from './core/services/price.service';
+import * as CryptoActions from './store/crypto/crypto.actions';
+import { selectCryptoList, selectSelectedCurrency } from './store/crypto/crypto.selectors';
 import { CurrencyService } from './core/services/currency.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, FormsModule],
+  imports: [CommonModule, RouterOutlet, FormsModule],
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   isLoggedIn = false;
   userName = 'John Doe';
   userAvatar = 'https://ui-avatars.com/api/?name=John+Doe&background=00f3ff&color=0a0a0f';
@@ -31,48 +36,66 @@ export class AppComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private priceService: PriceService,
+    private store: Store,
     public currencyService: CurrencyService
   ) {}
 
   ngOnInit(): void {
-    this.selectedCurrency = this.currencyService.getSelectedCurrency();
-    this.loadCryptoData();
+    // Subscribe to selected currency and switch to the crypto list for that currency
+    this.store
+      .select(selectSelectedCurrency)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap((currency) => {
+          this.selectedCurrency = currency;
+          // Load data for new currency
+          this.loadCryptoData();
+          // Return observable for crypto list
+          return this.store.select(selectCryptoList(currency));
+        })
+      )
+      .subscribe((cryptos) => {
+        if (cryptos) {
+          console.log('Cryptos from store:', cryptos);
+          // Filter to get only the requested cryptos
+          this.cryptos = cryptos.filter((c) => this.cryptoIds.includes(c.id));
+          // Filter to get only the requested currencies
+          this.currencies = cryptos.filter((c) => this.currencyIds.includes(c.id));
+          console.log('Filtered cryptos:', this.cryptos);
+          console.log('Filtered currencies:', this.currencies);
+        }
+      });
 
-    // Subscribe to currency changes
-    this.currencyService.selectedCurrency$.subscribe((currency) => {
-      this.selectedCurrency = currency;
-      this.loadCryptoData();
-    });
+    // Load initial data
+    this.loadCryptoData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadCryptoData(): void {
-    // Fetch Top Cryptos
-    this.priceService.getCoinsByIds(this.cryptoIds, this.selectedCurrency).subscribe({
-      next: (data) => {
-        console.log('Cryptos loaded:', data.length, data);
-        this.cryptos = data;
-      },
-      error: (err) => {
-        console.error('Error loading top cryptos:', err);
-      },
-    });
-
-    // Fetch Currencies
-    this.priceService.getCoinsByIds(this.currencyIds, this.selectedCurrency).subscribe({
-      next: (data) => {
-        console.log('Currencies loaded:', data.length, data);
-        this.currencies = data;
-      },
-      error: (err) => {
-        console.error('Error loading currencies:', err);
-      },
-    });
+    // Dispatch actions to load data into store
+    // Combine all IDs into one request
+    const allIds = [...this.cryptoIds, ...this.currencyIds];
+    this.store.dispatch(
+      CryptoActions.loadCryptoList({
+        ids: allIds,
+        currency: this.selectedCurrency,
+      })
+    );
   }
 
   onCurrencyChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    this.currencyService.setSelectedCurrency(target.value);
+    const newCurrency = target.value;
+
+    // Dispatch action to update currency in store
+    this.store.dispatch(CryptoActions.setSelectedCurrency({ currency: newCurrency }));
+
+    // Also update currency service for compatibility
+    this.currencyService.setSelectedCurrency(newCurrency);
   }
 
   getCurrencySymbol(): string {

@@ -1,0 +1,59 @@
+<div class="debug-panel" [class.open]="isOpen">
+  <!-- Toggle Button -->
+  <button class="debug-toggle" (click)="togglePanel()" title="Toggle Debug Panel">🐛</button>
+
+  <!-- Panel Content -->
+  <div class="debug-content" *ngIf="isOpen">
+    <div class="debug-header">
+      <h3>🐛 Debug Panel</h3>
+      <button class="close-btn" (click)="togglePanel()">✕</button>
+    </div>
+
+    <div class="debug-body">
+      <!-- App Info -->
+      <div class="debug-section">
+        <h4>📱 App State</h4>
+        <div class="debug-item">
+          <span class="label">Selected Currency:</span>
+          <span class="value">{{ selectedCurrency | uppercase }}</span>
+        </div>
+        <div class="debug-item">
+          <span class="label">Currency Symbol:</span>
+          <span class="value">{{ currencyService.getCurrencySymbol() }}</span>
+        </div>
+        <div class="debug-item">
+          <span class="label">Last Update:</span>
+          <span class="value">{{ lastUpdate | date : 'HH:mm:ss' }}</span>
+        </div>
+      </div>
+
+      <!-- Cache Info -->
+      <div class="debug-section">
+        <h4>💾 Cache State</h4>
+        <div class="debug-item">
+          <span class="label">Cache Size:</span>
+          <span class="value highlight">{{ cacheStats.size }} entries</span>
+        </div>
+        <button class="clear-btn" (click)="clearCache()">Clear Cache</button>
+      </div>
+
+      <!-- Cache Entries -->
+      <div class="debug-section" *ngIf="cacheStats.keys.length > 0">
+        <h4>🗂️ Cached Entries</h4>
+        <div class="cache-list">
+          @for (key of cacheStats.keys; track key) {
+          <div class="cache-entry">
+            <span class="cache-type">{{ getCacheKeyType(key) }}</span>
+            <span class="cache-key">{{ formatKey(key) }}</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="debug-section" *ngIf="cacheStats.keys.length === 0">
+        <p class="empty-message">No cached data</p>
+      </div>
+    </div>
+  </div>
+</div>

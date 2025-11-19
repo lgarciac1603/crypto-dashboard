@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { CacheService } from './cache.service';
 
 export interface Currency {
   code: string;
@@ -25,11 +26,15 @@ export class CurrencyService {
     { code: 'mxn', name: 'Mexican Peso', symbol: 'MX$' },
   ];
 
+  constructor(private cacheService: CacheService) {}
+
   getSelectedCurrency(): string {
     return this.selectedCurrencySubject.value;
   }
 
   setSelectedCurrency(currency: string): void {
+    // Clear cache when currency changes to fetch fresh data
+    this.cacheService.clear();
     this.selectedCurrencySubject.next(currency);
   }
 
