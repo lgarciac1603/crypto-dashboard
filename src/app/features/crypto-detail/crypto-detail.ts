@@ -4,11 +4,10 @@ import { ActivatedRoute } from '@angular/router';
 import { interval, Subject, takeUntil } from 'rxjs';
 import { PriceService } from '../../core/services/price.service';
 import { Crypto } from '../../core/models/crypto.model';
-
-type TimePeriod = '1h' | '24h' | '7d' | '30d' | '1y' | '5y';
-
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { EChartsOption } from 'echarts';
+
+type TimePeriod = '1h' | '24h' | '7d' | '30d' | '1y';
 
 @Component({
   selector: 'app-crypto-detail',
@@ -31,7 +30,6 @@ export class CryptoDetail implements OnInit, OnDestroy {
     { label: 'Week', value: '7d' },
     { label: 'Month', value: '30d' },
     { label: 'Year', value: '1y' },
-    { label: '5 Years', value: '5y' },
   ];
 
   constructor(private route: ActivatedRoute, private priceService: PriceService) {}
@@ -47,24 +45,71 @@ export class CryptoDetail implements OnInit, OnDestroy {
         this.loadCryptoData(cryptoId);
       });
 
-    this.initChart();
+    this.selectPeriod('24h');
   }
 
-  initChart(): void {
-    const data = [];
-    let now = new Date();
-    let value = Math.random() * 1000;
-    for (let i = 0; i < 100; i++) {
-      data.push({
-        name: now.toString(),
-        value: [
-          [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('/'),
-          Math.round(value),
-        ],
-      });
-      now = new Date(now.getTime() + 24 * 3600 * 1000);
-      value = value + Math.random() * 21 - 10;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadCryptoData(id: string): void {
+    this.priceService.getCryptoDetail(id).subscribe({
+      next: (data) => {
+        this.crypto = data;
+        this.isLoading = false;
+        this.lastUpdate = new Date();
+      },
+      error: (err) => {
+        console.error('Error loading crypto:', err);
+        this.isLoading = false;
+      },
+    });
+  }
+
+  selectPeriod(period: TimePeriod): void {
+    this.selectedPeriod = period;
+    const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
+
+    // Map period to CoinGecko API format
+    let days = '1';
+    switch (period) {
+      case '1h':
+        days = '1';
+        break;
+      case '24h':
+        days = '1';
+        break;
+      case '7d':
+        days = '7';
+        break;
+      case '30d':
+        days = '30';
+        break;
+      case '1y':
+        days = '365';
+        break;
     }
+
+    this.loadChartData(cryptoId, days);
+  }
+
+  loadChartData(id: string, days: string): void {
+    this.priceService.getHistoricalData(id, days).subscribe({
+      next: (data) => {
+        this.updateChart(data.prices);
+      },
+      error: (err) => {
+        console.error('Error loading chart data:', err);
+      },
+    });
+  }
+
+  updateChart(prices: [number, number][]): void {
+    const data = prices.map((item) => ({
+      name: new Date(item[0]).toString(),
+      value: [new Date(item[0]).toISOString(), item[1]],
+    }));
 
     this.chartOption = {
       backgroundColor: 'transparent',
@@ -78,6 +123,13 @@ export class CryptoDetail implements OnInit, OnDestroy {
         textStyle: {
           color: '#ffffff',
         },
+        formatter: (params: any) => {
+          const date = new Date(params[0].value[0]);
+          const price = params[0].value[1];
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br/>Price: $${price.toFixed(
+            2
+          )}`;
+        },
       },
       grid: {
         left: '3%',
@@ -86,9 +138,8 @@ export class CryptoDetail implements OnInit, OnDestroy {
         containLabel: true,
       },
       xAxis: {
-        type: 'category',
+        type: 'time',
         boundaryGap: false,
-        data: data.map((item) => item.value[0]),
         axisLine: {
           lineStyle: {
             color: '#4B5563',
@@ -96,10 +147,17 @@ export class CryptoDetail implements OnInit, OnDestroy {
         },
         axisLabel: {
           color: '#9CA3AF',
+          formatter: (value: any) => {
+            const date = new Date(value);
+            return this.selectedPeriod === '1h' || this.selectedPeriod === '24h'
+              ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : date.toLocaleDateString();
+          },
         },
       },
       yAxis: {
         type: 'value',
+        scale: true,
         splitLine: {
           lineStyle: {
             color: '#374151',
@@ -107,6 +165,7 @@ export class CryptoDetail implements OnInit, OnDestroy {
         },
         axisLabel: {
           color: '#9CA3AF',
+          formatter: (value: any) => `$${value.toLocaleString()}`,
         },
       },
       series: [
@@ -139,33 +198,10 @@ export class CryptoDetail implements OnInit, OnDestroy {
             color: '#D4AF37',
             width: 2,
           },
-          data: data.map((item) => item.value[1]),
+          data: data,
         },
       ],
-    };
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  loadCryptoData(id: string): void {
-    this.priceService.getCryptoDetail(id).subscribe({
-      next: (data) => {
-        this.crypto = data;
-        this.isLoading = false;
-        this.lastUpdate = new Date();
-      },
-      error: (err) => {
-        console.error('Error loading crypto:', err);
-        this.isLoading = false;
-      },
-    });
-  }
-
-  selectPeriod(period: TimePeriod): void {
-    this.selectedPeriod = period;
+    } as any;
   }
 
   getPriceChangeClass(): string {
