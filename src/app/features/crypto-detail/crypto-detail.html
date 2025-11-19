@@ -1,105 +1,101 @@
 <div class="crypto-detail-container">
   @if (isLoading) {
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Loading cryptocurrency data...</p>
-    </div>
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Loading cryptocurrency data...</p>
+  </div>
   } @else if (crypto) {
-    <!-- Header Section -->
-    <div class="crypto-header">
-      <div class="crypto-info">
-        <img [src]="crypto.image" [alt]="crypto.name" class="crypto-icon" />
-        <div>
-          <h1 class="crypto-name">{{ crypto.name }}</h1>
-          <span class="crypto-symbol">{{ crypto.symbol | uppercase }}</span>
-          <span class="rank-badge">Rank #{{ crypto.market_cap_rank }}</span>
-        </div>
-      </div>
-      <div class="last-update">
-        <span class="update-label">Last Update:</span>
-        <span class="update-time">{{ lastUpdate | date:'short' }}</span>
+  <!-- Header Section -->
+  <div class="crypto-header">
+    <div class="crypto-info">
+      <img [src]="crypto.image" [alt]="crypto.name" class="crypto-icon" />
+      <div>
+        <h1 class="crypto-name">{{ crypto.name }}</h1>
+        <span class="crypto-symbol">{{ crypto.symbol | uppercase }}</span>
+        <span class="rank-badge">Rank #{{ crypto.market_cap_rank }}</span>
       </div>
     </div>
+    <div class="last-update">
+      <span class="update-label">Last Update:</span>
+      <span class="update-time">{{ lastUpdate | date : 'short' }}</span>
+    </div>
+  </div>
 
-    <!-- Price Section -->
-    <div class="price-section">
-      <div class="main-price">
-        <span class="price-label">Current Price</span>
-        <h2 class="price-value">${{ crypto.current_price | number:'1.2-2' }}</h2>
-        <span [class]="'price-change ' + getPriceChangeClass()">
-          {{ crypto.price_change_percentage_24h >= 0 ? '↑' : '↓' }}
-          {{ crypto.price_change_percentage_24h | number:'1.2-2' }}%
-        </span>
-      </div>
-
-      <!-- Period Selector -->
-      <div class="period-selector">
-        @for (period of periods; track period.value) {
-          <button 
-            class="period-btn"
-            [class.active]="selectedPeriod === period.value"
-            (click)="selectPeriod(period.value)">
-            {{ period.label }}
-          </button>
-        }
-      </div>
+  <!-- Price Section -->
+  <div class="price-section">
+    <div class="main-price">
+      <span class="price-label">Current Price</span>
+      <h2 class="price-value">${{ crypto.current_price | number : '1.2-2' }}</h2>
+      <span [class]="'price-change ' + getPriceChangeClass()">
+        {{ crypto.price_change_percentage_24h >= 0 ? '↑' : '↓' }}
+        {{ crypto.price_change_percentage_24h | number : '1.2-2' }}%
+      </span>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-label">Market Cap</span>
-        <span class="stat-value">${{ formatNumber(crypto.market_cap ?? 0) }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">24h Volume</span>
-        <span class="stat-value">${{ formatNumber(crypto.total_volume ?? 0) }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">24h High</span>
-        <span class="stat-value positive">${{ crypto.high_24h ?? 0 | number:'1.2-2' }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">24h Low</span>
-        <span class="stat-value negative">${{ crypto.low_24h ?? 0 | number:'1.2-2' }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">Circulating Supply</span>
-        <span class="stat-value">{{ formatNumber(crypto.circulating_supply ?? 0) }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">All Time High</span>
-        <span class="stat-value">${{ crypto.ath ?? 0 | number:'1.2-2' }}</span>
-      </div>
-      
-      <div class="stat-card">
-        <span class="stat-label">All Time Low</span>
-        <span class="stat-value">${{ crypto.atl ?? 0 | number:'1.2-2' }}</span>
-      </div>
-      
-      <div class="stat-card highlight">
-        <span class="stat-label">Real-Time Updates</span>
-        <span class="stat-value accent">Active ⚡</span>
-      </div>
+    <!-- Period Selector -->
+    <div class="period-selector">
+      @for (period of periods; track period.value) {
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod === period.value"
+        (click)="selectPeriod(period.value)"
+      >
+        {{ period.label }}
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-label">Market Cap</span>
+      <span class="stat-value">${{ formatNumber(crypto.market_cap ?? 0) }}</span>
     </div>
 
-    <!-- Chart Placeholder -->
-    <div class="chart-section">
-      <div class="chart-placeholder">
-        <div class="chart-icon">📈</div>
-        <p>Price Chart for {{ selectedPeriod }}</p>
-        <span class="chart-note">Chart visualization can be integrated with libraries like Chart.js or ngx-charts</span>
-      </div>
+    <div class="stat-card">
+      <span class="stat-label">24h Volume</span>
+      <span class="stat-value">${{ formatNumber(crypto.total_volume ?? 0) }}</span>
     </div>
+
+    <div class="stat-card">
+      <span class="stat-label">24h High</span>
+      <span class="stat-value positive">${{ crypto.high_24h ?? 0 | number : '1.2-2' }}</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">24h Low</span>
+      <span class="stat-value negative">${{ crypto.low_24h ?? 0 | number : '1.2-2' }}</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">Circulating Supply</span>
+      <span class="stat-value">{{ formatNumber(crypto.circulating_supply ?? 0) }}</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">All Time High</span>
+      <span class="stat-value">${{ crypto.ath ?? 0 | number : '1.2-2' }}</span>
+    </div>
+
+    <div class="stat-card">
+      <span class="stat-label">All Time Low</span>
+      <span class="stat-value">${{ crypto.atl ?? 0 | number : '1.2-2' }}</span>
+    </div>
+
+    <div class="stat-card highlight">
+      <span class="stat-label">Real-Time Updates</span>
+      <span class="stat-value accent">Active ⚡</span>
+    </div>
+  </div>
+
+  <!-- Chart Placeholder -->
+  <div class="chart-section">
+    <div echarts [options]="chartOption" class="chart-container" style="height: 400px"></div>
+  </div>
   } @else {
-    <div class="error-state">
-      <p>❌ Unable to load cryptocurrency data</p>
-    </div>
+  <div class="error-state">
+    <p>❌ Unable to load cryptocurrency data</p>
+  </div>
   }
 </div>
-
