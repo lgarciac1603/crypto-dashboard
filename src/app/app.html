@@ -2,24 +2,24 @@
   <!-- Top App Bar -->
   <header class="app-bar">
     <div class="app-bar-left">
-      <h1 class="logo">
+      <h1 class="logo" routerLink="/" style="cursor: pointer">
         <span class="accent-text">CRYPTO</span>
         <span class="accent-text-alt">PULSE</span>
       </h1>
     </div>
     <div class="app-bar-right">
       @if (isLoggedIn) {
-        <div class="user-info">
-          <img [src]="userAvatar" alt="User" class="user-avatar" />
-          <span class="user-name">{{ userName }}</span>
-          <button class="btn-icon" (click)="logout()">
-            <span>🚪</span>
-          </button>
-        </div>
-      } @else {
-        <button class="btn-login" (click)="login()">
-          <span>Login</span>
+      <div class="user-info">
+        <img [src]="userAvatar" alt="User" class="user-avatar" />
+        <span class="user-name">{{ userName }}</span>
+        <button class="btn-icon" (click)="logout()">
+          <span>🚪</span>
         </button>
+      </div>
+      } @else {
+      <button class="btn-login" (click)="login()">
+        <span>Login</span>
+      </button>
       }
     </div>
   </header>
@@ -30,38 +30,70 @@
       <h3 class="sidebar-title">User</h3>
       <div class="user-section">
         @if (isLoggedIn) {
-          <div class="user-card">
-            <img [src]="userAvatar" alt="Avatar" />
-            <p>{{ userName }}</p>
-          </div>
+        <div class="user-card">
+          <img [src]="userAvatar" alt="Avatar" />
+          <p>{{ userName }}</p>
+        </div>
         } @else {
-          <button class="btn-sidebar" (click)="login()">Login</button>
+        <button class="btn-sidebar" (click)="login()">Login</button>
         }
       </div>
     </div>
 
     <div class="sidebar-section">
-      <h3 class="sidebar-title">Favorites ⭐</h3>
+      <h3 class="sidebar-title">Currency</h3>
+      <select
+        class="currency-selector"
+        [(ngModel)]="selectedCurrency"
+        (change)="onCurrencyChange($event)"
+      >
+        @for (currency of currencyService.supportedCurrencies; track currency.code) {
+        <option [value]="currency.code">{{ currency.symbol }} {{ currency.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Top Cryptos</h3>
       <div class="favorites-list">
-        @for (fav of favorites; track fav.id) {
-          <div class="favorite-item" (click)="selectCrypto(fav)">
-            <img [src]="fav.image" [alt]="fav.name" />
-            <div class="fav-info">
-              <span class="fav-name">{{ fav.symbol | uppercase }}</span>
-              <span class="fav-price">${{ fav.current_price | number: '1.2-2' }}</span>
-            </div>
+        @for (crypto of cryptos; track crypto.id) {
+        <div class="favorite-item" (click)="selectCrypto(crypto)">
+          <img [src]="crypto.image" [alt]="crypto.name" />
+          <div class="fav-info">
+            <span class="fav-name">{{ crypto.symbol | uppercase }}</span>
+            <span class="fav-price"
+              >{{ getCurrencySymbol() }}{{ crypto.current_price | number : '1.2-2' }}</span
+            >
           </div>
+        </div>
         } @empty {
-          <p class="empty-message">No favorites yet</p>
+        <p class="empty-message">Loading cryptos...</p>
+        }
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Currencies</h3>
+      <div class="favorites-list">
+        @for (currency of currencies; track currency.id) {
+        <div class="favorite-item" (click)="selectCrypto(currency)">
+          <img [src]="currency.image" [alt]="currency.name" />
+          <div class="fav-info">
+            <span class="fav-name">{{ currency.symbol | uppercase }}</span>
+            <span class="fav-price"
+              >{{ getCurrencySymbol() }}{{ currency.current_price | number : '1.2-2' }}</span
+            >
+          </div>
+        </div>
+        } @empty {
+        <p class="empty-message">Loading currencies...</p>
         }
       </div>
     </div>
 
     <div class="sidebar-section">
       @if (isLoggedIn) {
-        <button class="btn-sidebar btn-logout" (click)="logout()">
-          <span>🚪</span> Logout
-        </button>
+      <button class="btn-sidebar btn-logout" (click)="logout()"><span>🚪</span> Logout</button>
       }
     </div>
   </aside>

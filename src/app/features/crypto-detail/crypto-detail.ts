@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { interval, Subject, takeUntil } from 'rxjs';
 import { PriceService } from '../../core/services/price.service';
+import { CurrencyService } from '../../core/services/currency.service';
 import { Crypto } from '../../core/models/crypto.model';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { EChartsOption } from 'echarts';
@@ -32,20 +33,37 @@ export class CryptoDetail implements OnInit, OnDestroy {
     { label: 'Year', value: '1y' },
   ];
 
-  constructor(private route: ActivatedRoute, private priceService: PriceService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private priceService: PriceService,
+    public currencyService: CurrencyService
+  ) {}
 
   ngOnInit(): void {
-    const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
-    this.loadCryptoData(cryptoId);
+    // Subscribe to route parameter changes
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const cryptoId = params.get('id') || 'bitcoin';
+      this.loadCryptoData(cryptoId);
+      this.loadChartData(cryptoId, '1'); // Load initial chart
+    });
 
-    // Auto-refresh every 30 seconds
-    interval(30000)
+    // Auto-refresh every 60 seconds (increased from 30 to reduce API calls)
+    interval(60000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
         this.loadCryptoData(cryptoId);
       });
 
-    this.selectPeriod('24h');
+    // Subscribe to currency changes - reload data when currency changes
+    this.currencyService.selectedCurrency$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
+      this.loadCryptoData(cryptoId);
+      // Reload chart with current period
+      const days = this.getDaysForPeriod(this.selectedPeriod);
+      this.loadChartData(cryptoId, days);
+    });
   }
 
   ngOnDestroy(): void {
@@ -54,7 +72,8 @@ export class CryptoDetail implements OnInit, OnDestroy {
   }
 
   loadCryptoData(id: string): void {
-    this.priceService.getCryptoDetail(id).subscribe({
+    const currency = this.currencyService.getSelectedCurrency();
+    this.priceService.getCryptoDetail(id, currency).subscribe({
       next: (data) => {
         this.crypto = data;
         this.isLoading = false;
@@ -70,32 +89,29 @@ export class CryptoDetail implements OnInit, OnDestroy {
   selectPeriod(period: TimePeriod): void {
     this.selectedPeriod = period;
     const cryptoId = this.route.snapshot.paramMap.get('id') || 'bitcoin';
-
-    // Map period to CoinGecko API format
-    let days = '1';
-    switch (period) {
-      case '1h':
-        days = '1';
-        break;
-      case '24h':
-        days = '1';
-        break;
-      case '7d':
-        days = '7';
-        break;
-      case '30d':
-        days = '30';
-        break;
-      case '1y':
-        days = '365';
-        break;
-    }
-
+    const days = this.getDaysForPeriod(period);
     this.loadChartData(cryptoId, days);
   }
 
+  getDaysForPeriod(period: TimePeriod): string {
+    switch (period) {
+      case '1h':
+      case '24h':
+        return '1';
+      case '7d':
+        return '7';
+      case '30d':
+        return '30';
+      case '1y':
+        return '365';
+      default:
+        return '1';
+    }
+  }
+
   loadChartData(id: string, days: string): void {
-    this.priceService.getHistoricalData(id, days).subscribe({
+    const currency = this.currencyService.getSelectedCurrency();
+    this.priceService.getHistoricalData(id, days, currency).subscribe({
       next: (data) => {
         this.updateChart(data.prices);
       },
@@ -126,7 +142,8 @@ export class CryptoDetail implements OnInit, OnDestroy {
         formatter: (params: any) => {
           const date = new Date(params[0].value[0]);
           const price = params[0].value[1];
-          return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br/>Price: $${price.toFixed(
+          const symbol = this.currencyService.getCurrencySymbol();
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}<br/>Price: ${symbol}${price.toFixed(
             2
           )}`;
         },
@@ -165,7 +182,10 @@ export class CryptoDetail implements OnInit, OnDestroy {
         },
         axisLabel: {
           color: '#9CA3AF',
-          formatter: (value: any) => `$${value.toLocaleString()}`,
+          formatter: (value: any) => {
+            const symbol = this.currencyService.getCurrencySymbol();
+            return `${symbol}${value.toLocaleString()}`;
+          },
         },
       },
       series: [
@@ -215,5 +235,9 @@ export class CryptoDetail implements OnInit, OnDestroy {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
     return num.toFixed(2);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/']);
   }
 }

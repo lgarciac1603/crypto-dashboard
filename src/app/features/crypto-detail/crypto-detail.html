@@ -1,4 +1,10 @@
 <div class="crypto-detail-container">
+  <!-- Back Button - Always visible -->
+  <button class="back-button" (click)="goBack()">
+    <span class="back-icon">←</span>
+    <span>Back to Dashboard</span>
+  </button>
+
   @if (isLoading) {
   <div class="loading">
     <div class="spinner"></div>
@@ -25,7 +31,9 @@
   <div class="price-section">
     <div class="main-price">
       <span class="price-label">Current Price</span>
-      <h2 class="price-value">${{ crypto.current_price | number : '1.2-2' }}</h2>
+      <h2 class="price-value">
+        {{ currencyService.getCurrencySymbol() }}{{ crypto.current_price | number : '1.2-2' }}
+      </h2>
       <span [class]="'price-change ' + getPriceChangeClass()">
         {{ crypto.price_change_percentage_24h >= 0 ? '↑' : '↓' }}
         {{ crypto.price_change_percentage_24h | number : '1.2-2' }}%
@@ -50,22 +58,31 @@
   <div class="stats-grid">
     <div class="stat-card">
       <span class="stat-label">Market Cap</span>
-      <span class="stat-value">${{ formatNumber(crypto.market_cap ?? 0) }}</span>
+      <span class="stat-value"
+        >{{ currencyService.getCurrencySymbol() }}{{ formatNumber(crypto.market_cap ?? 0) }}</span
+      >
     </div>
 
     <div class="stat-card">
       <span class="stat-label">24h Volume</span>
-      <span class="stat-value">${{ formatNumber(crypto.total_volume ?? 0) }}</span>
+      <span class="stat-value"
+        >{{ currencyService.getCurrencySymbol() }}{{ formatNumber(crypto.total_volume ?? 0) }}</span
+      >
     </div>
 
     <div class="stat-card">
       <span class="stat-label">24h High</span>
-      <span class="stat-value positive">${{ crypto.high_24h ?? 0 | number : '1.2-2' }}</span>
+      <span class="stat-value positive"
+        >{{ currencyService.getCurrencySymbol()
+        }}{{ crypto.high_24h ?? 0 | number : '1.2-2' }}</span
+      >
     </div>
 
     <div class="stat-card">
       <span class="stat-label">24h Low</span>
-      <span class="stat-value negative">${{ crypto.low_24h ?? 0 | number : '1.2-2' }}</span>
+      <span class="stat-value negative"
+        >{{ currencyService.getCurrencySymbol() }}{{ crypto.low_24h ?? 0 | number : '1.2-2' }}</span
+      >
     </div>
 
     <div class="stat-card">
@@ -75,12 +92,16 @@
 
     <div class="stat-card">
       <span class="stat-label">All Time High</span>
-      <span class="stat-value">${{ crypto.ath ?? 0 | number : '1.2-2' }}</span>
+      <span class="stat-value"
+        >{{ currencyService.getCurrencySymbol() }}{{ crypto.ath ?? 0 | number : '1.2-2' }}</span
+      >
     </div>
 
     <div class="stat-card">
       <span class="stat-label">All Time Low</span>
-      <span class="stat-value">${{ crypto.atl ?? 0 | number : '1.2-2' }}</span>
+      <span class="stat-value"
+        >{{ currencyService.getCurrencySymbol() }}{{ crypto.atl ?? 0 | number : '1.2-2' }}</span
+      >
     </div>
 
     <div class="stat-card highlight">

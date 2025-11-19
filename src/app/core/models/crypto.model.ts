@@ -24,28 +24,28 @@ export interface CryptoDetailResponse {
   };
   market_data: {
     current_price: {
-      usd: number;
+      [key: string]: number;
     };
     price_change_percentage_24h: number;
     market_cap: {
-      usd: number;
+      [key: string]: number;
     };
     market_cap_rank: number;
     total_volume: {
-      usd: number;
+      [key: string]: number;
     };
     high_24h: {
-      usd: number;
+      [key: string]: number;
     };
     low_24h: {
-      usd: number;
+      [key: string]: number;
     };
     circulating_supply: number;
     ath: {
-      usd: number;
+      [key: string]: number;
     };
     atl: {
-      usd: number;
+      [key: string]: number;
     };
   };
 }

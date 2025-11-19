@@ -1,16 +1,53 @@
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-gold);
+  border-radius: 8px;
+  color: var(--accent-gold);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  .back-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background: var(--accent-gold);
+    color: var(--bg-darker);
+    box-shadow: var(--glow-gold);
+    transform: translateX(-3px);
+
+    .back-icon {
+      transform: translateX(-3px);
+    }
+  }
+
+  &:active {
+    transform: translateX(-5px);
+  }
+}
+
 .crypto-detail-container {
   max-width: 1400px;
   margin: 0 auto;
 }
 
-.loading, .error-state {
+.loading,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 400px;
   color: var(--text-secondary);
-  
+
   .spinner {
     width: 50px;
     height: 50px;
@@ -19,7 +56,7 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
-  
+
   p {
     margin-top: 1rem;
     font-size: 1.1rem;
@@ -27,7 +64,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .crypto-header {
@@ -39,32 +78,32 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  
+
   .crypto-info {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    
+
     .crypto-icon {
       width: 64px;
       height: 64px;
       border-radius: 50%;
       box-shadow: var(--glow-gold);
     }
-    
+
     .crypto-name {
       font-size: 2rem;
       color: var(--text-primary);
       margin: 0;
     }
-    
+
     .crypto-symbol {
       color: var(--text-secondary);
       font-size: 1.2rem;
       text-transform: uppercase;
       margin-right: 1rem;
     }
-    
+
     .rank-badge {
       background: var(--accent-gold);
       color: var(--bg-darker);
@@ -74,18 +113,18 @@
       font-weight: 600;
     }
   }
-  
+
   .last-update {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 0.3rem;
-    
+
     .update-label {
       color: var(--text-muted);
       font-size: 0.85rem;
     }
-    
+
     .update-time {
       color: var(--positive);
       font-size: 0.9rem;
@@ -100,18 +139,18 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  
+
   .main-price {
     text-align: center;
     margin-bottom: 2rem;
-    
+
     .price-label {
       color: var(--text-secondary);
       font-size: 1rem;
       display: block;
       margin-bottom: 0.5rem;
     }
-    
+
     .price-value {
       font-size: 3.5rem;
       color: var(--accent-gold);
@@ -119,28 +158,28 @@
       margin: 0.5rem 0;
       font-weight: 700;
     }
-    
+
     .price-change {
       font-size: 1.5rem;
       font-weight: 600;
-      
+
       &.positive {
         color: var(--positive);
         text-shadow: var(--glow-gold);
       }
-      
+
       &.negative {
         color: var(--negative);
       }
     }
   }
-  
+
   .period-selector {
     display: flex;
     justify-content: center;
     gap: 1rem;
     flex-wrap: wrap;
-    
+
     .period-btn {
       padding: 0.8rem 1.5rem;
       background: var(--bg-darker);
@@ -150,12 +189,12 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.3s ease;
-      
+
       &:hover {
         border-color: var(--accent-gold);
         color: var(--accent-gold);
       }
-      
+
       &.active {
         background: var(--accent-gold);
         color: var(--bg-darker);
@@ -171,7 +210,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
-  
+
   .stat-card {
     padding: 1.5rem;
     background: var(--bg-card);
@@ -181,38 +220,38 @@
     flex-direction: column;
     gap: 0.8rem;
     transition: all 0.3s ease;
-    
+
     &:hover {
       border-color: var(--accent-gold);
       box-shadow: var(--glow-gold);
       transform: translateY(-3px);
     }
-    
+
     &.highlight {
       border-color: var(--positive);
       background: linear-gradient(135deg, var(--bg-card), var(--accent-gold-dim));
     }
-    
+
     .stat-label {
       color: var(--text-secondary);
       font-size: 0.9rem;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    
+
     .stat-value {
       color: var(--text-primary);
       font-size: 1.5rem;
       font-weight: 600;
-      
+
       &.positive {
         color: var(--positive);
       }
-      
+
       &.negative {
         color: var(--negative);
       }
-      
+
       &.accent {
         color: var(--accent-gold);
         text-shadow: var(--glow-gold);
@@ -227,7 +266,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  
+
   .chart-placeholder {
     display: flex;
     flex-direction: column;
@@ -236,16 +275,16 @@
     min-height: 300px;
     color: var(--text-secondary);
     gap: 1rem;
-    
+
     .chart-icon {
       font-size: 4rem;
     }
-    
+
     p {
       font-size: 1.2rem;
       color: var(--accent-silver);
     }
-    
+
     .chart-note {
       font-size: 0.85rem;
       color: var(--text-muted);
@@ -258,16 +297,16 @@
   .crypto-header {
     flex-direction: column;
     gap: 1rem;
-    
+
     .last-update {
       align-items: center;
     }
   }
-  
+
   .price-section .main-price .price-value {
     font-size: 2.5rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
