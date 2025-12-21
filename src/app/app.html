@@ -24,6 +24,14 @@
     </div>
   </header>
 
+  <!-- Login Modal -->
+  @if (showLoginModal) {
+  <app-login-modal
+    (close)="closeLoginModal()"
+    (loginSuccess)="onLoginSuccess($event)"
+  ></app-login-modal>
+  }
+
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-section">
@@ -88,13 +96,16 @@
           <img [src]="currency.image" [alt]="currency.name" />
           <div class="fav-info">
             <span class="fav-name">{{ currency.symbol | uppercase }}</span>
-            <span class="fav-price">{{ getCurrencySymbol() }}{{ currency.current_price | number : '1.2-2' }}</span>
-            <span 
+            <span class="fav-price"
+              >{{ getCurrencySymbol() }}{{ currency.current_price | number : '1.2-2' }}</span
+            >
+            <span
               class="fav-change"
               [class.positive]="currency.price_change_percentage_24h > 0"
               [class.negative]="currency.price_change_percentage_24h < 0"
             >
-              {{ currency.price_change_percentage_24h > 0 ? '+' : '' }}{{ currency.price_change_percentage_24h | number : '1.2-2' }}%
+              {{ currency.price_change_percentage_24h > 0 ? '+' : ''
+              }}{{ currency.price_change_percentage_24h | number : '1.2-2' }}%
             </span>
           </div>
         </div>

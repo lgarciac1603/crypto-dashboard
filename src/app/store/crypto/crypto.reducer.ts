@@ -141,7 +141,10 @@ export const cryptoReducer = createReducer(
   })),
 
   // Cache
-  on(CryptoActions.clearCache, () => initialCryptoState),
+  on(CryptoActions.clearCache, (state) => ({
+    ...initialCryptoState,
+    selectedCurrency: state.selectedCurrency,
+  })),
 
   on(CryptoActions.clearCacheByPrefix, (state, { prefix }) => {
     // Clear crypto details or chart data by prefix

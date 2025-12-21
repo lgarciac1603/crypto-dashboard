@@ -8,11 +8,13 @@ import { Crypto } from './core/models/crypto.model';
 import * as CryptoActions from './store/crypto/crypto.actions';
 import { selectCryptoList, selectSelectedCurrency } from './store/crypto/crypto.selectors';
 import { CurrencyService } from './core/services/currency.service';
+import { AuthService, User } from './core/services/auth.service';
+import { LoginModalComponent } from './shared/components/login-modal/login-modal.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, FormsModule],
+  imports: [CommonModule, RouterOutlet, FormsModule, LoginModalComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
 })
@@ -20,8 +22,9 @@ export class AppComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   isLoggedIn = false;
-  userName = 'John Doe';
-  userAvatar = 'https://ui-avatars.com/api/?name=John+Doe&background=00f3ff&color=0a0a0f';
+  userName = '';
+  userAvatar = '';
+  showLoginModal = false;
 
   // Currency selector
   selectedCurrency = 'usd';
@@ -37,10 +40,14 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private store: Store,
-    public currencyService: CurrencyService
+    public currencyService: CurrencyService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Check if user is logged in
+    this.updateLoginStatus();
+
     // Subscribe to selected currency and switch to the crypto list for that currency
     this.store
       .select(selectSelectedCurrency)
@@ -103,11 +110,34 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   login(): void {
-    this.isLoggedIn = true;
+    this.showLoginModal = true;
   }
 
   logout(): void {
-    this.isLoggedIn = false;
+    this.authService.logout();
+    this.updateLoginStatus();
+  }
+
+  closeLoginModal(): void {
+    this.showLoginModal = false;
+  }
+
+  onLoginSuccess(user: User): void {
+    this.updateLoginStatus();
+  }
+
+  private updateLoginStatus(): void {
+    this.isLoggedIn = this.authService.isLoggedIn();
+    if (this.isLoggedIn) {
+      const user = this.authService.getCurrentUser();
+      if (user) {
+        this.userName = user.username;
+        this.userAvatar = user.avatar;
+      }
+    } else {
+      this.userName = '';
+      this.userAvatar = '';
+    }
   }
 
   selectCrypto(crypto: Crypto): void {
