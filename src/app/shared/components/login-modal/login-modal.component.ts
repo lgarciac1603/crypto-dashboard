@@ -18,9 +18,12 @@ export class LoginModalComponent {
   isLoading = false;
   errorMessage = '';
 
-  constructor(private fb: FormBuilder, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+  ) {
     this.loginForm = this.fb.group({
-      usernameOrEmail: ['', [Validators.required]],
+      usernameOrEmail: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]],
     });
   }

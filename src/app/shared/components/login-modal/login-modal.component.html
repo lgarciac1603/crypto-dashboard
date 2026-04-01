@@ -7,19 +7,20 @@
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
       <div class="form-group">
-        <label for="usernameOrEmail">Username or Email</label>
+        <label for="usernameOrEmail">Email</label>
         <input
           id="usernameOrEmail"
           type="text"
           formControlName="usernameOrEmail"
-          placeholder="Enter username or email"
+          placeholder="Enter email"
           [class.error]="
             loginForm.get('usernameOrEmail')?.invalid && loginForm.get('usernameOrEmail')?.touched
           "
         />
-        @if (loginForm.get('usernameOrEmail')?.invalid && loginForm.get('usernameOrEmail')?.touched)
-        {
-        <span class="error-text">Username or email is required</span>
+        @if (
+          loginForm.get('usernameOrEmail')?.invalid && loginForm.get('usernameOrEmail')?.touched
+        ) {
+          <span class="error-text">Valid email is required</span>
         }
       </div>
 
@@ -33,19 +34,19 @@
           [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
         />
         @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-        <span class="error-text">Password is required</span>
+          <span class="error-text">Password is required</span>
         }
       </div>
 
       @if (errorMessage) {
-      <div class="error-message">{{ errorMessage }}</div>
+        <div class="error-message">{{ errorMessage }}</div>
       }
 
       <button type="submit" class="login-btn" [disabled]="isLoading">
         @if (isLoading) {
-        <span>Loading...</span>
+          <span>Loading...</span>
         } @else {
-        <span>Login</span>
+          <span>Login</span>
         }
       </button>
     </form>

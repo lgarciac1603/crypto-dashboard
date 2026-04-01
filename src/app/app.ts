@@ -41,12 +41,15 @@ export class AppComponent implements OnInit, OnDestroy {
     private router: Router,
     private store: Store,
     public currencyService: CurrencyService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
-    // Check if user is logged in
-    this.updateLoginStatus();
+    // Restore session from persisted tokens if available
+    this.authService.initSession().subscribe({
+      next: () => this.updateLoginStatus(),
+      error: () => this.updateLoginStatus(),
+    });
 
     // Subscribe to selected currency and switch to the crypto list for that currency
     this.store
@@ -59,7 +62,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.loadCryptoData();
           // Return observable for crypto list
           return this.store.select(selectCryptoList(currency));
-        })
+        }),
       )
       .subscribe((cryptos) => {
         if (cryptos) {
@@ -90,7 +93,7 @@ export class AppComponent implements OnInit, OnDestroy {
       CryptoActions.loadCryptoList({
         ids: allIds,
         currency: this.selectedCurrency,
-      })
+      }),
     );
   }
 
@@ -114,8 +117,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.updateLoginStatus();
+    this.authService.logout().subscribe(() => {
+      this.updateLoginStatus();
+    });
   }
 
   closeLoginModal(): void {
