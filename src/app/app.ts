@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Subject, takeUntil, switchMap } from 'rxjs';
+import { Subject, switchMap, takeUntil } from 'rxjs';
 import { Crypto } from './core/models/crypto.model';
 import * as CryptoActions from './store/crypto/crypto.actions';
 import { selectCryptoList, selectSelectedCurrency } from './store/crypto/crypto.selectors';
@@ -25,6 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
   userName = '';
   userAvatar = '';
   showLoginModal = false;
+  redirectAfterLogin: string | null = null;
 
   // Currency selector
   selectedCurrency = 'usd';
@@ -38,6 +39,7 @@ export class AppComponent implements OnInit, OnDestroy {
   currencies: Crypto[] = [];
 
   constructor(
+    private route: ActivatedRoute,
     private router: Router,
     private store: Store,
     public currencyService: CurrencyService,
@@ -49,6 +51,15 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.initSession().subscribe({
       next: () => this.updateLoginStatus(),
       error: () => this.updateLoginStatus(),
+    });
+
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const shouldPromptLogin = params.get('login') === '1';
+      this.redirectAfterLogin = params.get('redirectTo');
+
+      if (shouldPromptLogin && !this.isLoggedIn) {
+        this.showLoginModal = true;
+      }
     });
 
     // Subscribe to selected currency and switch to the crypto list for that currency
@@ -113,7 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   login(): void {
-    this.showLoginModal = true;
+    this.router.navigate(['/login']);
   }
 
   logout(): void {
@@ -124,10 +135,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
   closeLoginModal(): void {
     this.showLoginModal = false;
+    this.clearLoginPromptQueryParams();
   }
 
   onLoginSuccess(user: User): void {
     this.updateLoginStatus();
+
+    if (this.redirectAfterLogin) {
+      const targetRoute = this.redirectAfterLogin;
+      this.redirectAfterLogin = null;
+      this.router.navigateByUrl(targetRoute);
+      this.clearLoginPromptQueryParams();
+      return;
+    }
+
+    this.clearLoginPromptQueryParams();
   }
 
   private updateLoginStatus(): void {
@@ -146,5 +168,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   selectCrypto(crypto: Crypto): void {
     this.router.navigate(['/crypto', crypto.id]);
+  }
+
+  private clearLoginPromptQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        login: null,
+        redirectTo: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 }
