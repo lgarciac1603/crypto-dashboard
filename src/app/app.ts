@@ -130,6 +130,7 @@ export class AppComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout().subscribe(() => {
       this.updateLoginStatus();
+      this.router.navigate(['/']);
     });
   }
 

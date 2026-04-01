@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Crypto } from '../../../core/models/crypto.model';
+import { FavoritesService } from '../../../core/services/favorites.service';
 import { NumberSignPipe } from '../../../shared/pipes/number-sign.pipe';
 
 @Component({
@@ -13,10 +14,19 @@ import { NumberSignPipe } from '../../../shared/pipes/number-sign.pipe';
 })
 export class CryptoCardComponent {
   @Input() crypto!: Crypto;
+  @Input() isFavorite = false;
+  @Input() favoritesService: FavoritesService | null = null;
 
   constructor(private router: Router) {}
 
   navigateToDetail(): void {
     this.router.navigate(['/crypto', this.crypto.id]);
+  }
+
+  toggleFavorite(event: Event): void {
+    event.stopPropagation();
+    if (this.favoritesService) {
+      this.favoritesService.toggleFavorite(this.crypto.id).subscribe();
+    }
   }
 }

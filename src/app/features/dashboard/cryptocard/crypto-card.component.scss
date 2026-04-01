@@ -9,6 +9,7 @@
   padding: 1.5rem;
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
 
   &:hover {
     transform: translateY(-6px);
@@ -16,11 +17,46 @@
     box-shadow: var(--glow-gold);
   }
 
+  .card-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-bottom: 1rem;
+  }
+
   img {
     width: 56px;
     height: 56px;
-    margin-bottom: 1rem;
     border-radius: 50%;
+  }
+
+  .favorite-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--bg-darker);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--accent-gold);
+      box-shadow: var(--glow-gold);
+    }
+
+    &.active {
+      background: var(--accent-gold-dim);
+      border-color: var(--accent-gold);
+      box-shadow: var(--glow-gold);
+    }
   }
 
   h3 {
