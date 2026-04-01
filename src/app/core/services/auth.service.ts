@@ -18,6 +18,11 @@ export interface LoginResponse {
   message?: string;
 }
 
+export interface RegisterResponse {
+  success: boolean;
+  message?: string;
+}
+
 interface SessionResponse {
   access_token: string;
   refresh_token?: string;
@@ -63,6 +68,32 @@ export class AuthService {
         }),
         catchError((error) => {
           const message = error?.error?.message || 'Invalid credentials';
+          return of({ success: false, message });
+        }),
+      );
+  }
+
+  register(data: {
+    username: string;
+    email: string;
+    password: string;
+  }): Observable<RegisterResponse> {
+    const body = new HttpParams()
+      .set('username', data.username)
+      .set('email', data.email)
+      .set('password', data.password);
+
+    return this.http
+      .post(`${API_BASE_URL}/users`, body.toString(), {
+        headers: this.formHeaders(),
+      })
+      .pipe(
+        map(() => ({
+          success: true,
+          message: 'User created successfully',
+        })),
+        catchError((error) => {
+          const message = error?.error?.message || 'Could not create user';
           return of({ success: false, message });
         }),
       );

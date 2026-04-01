@@ -1,11 +1,36 @@
 <div class="modal-overlay" (click)="onClose()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Login</h2>
+      <h2>{{ mode === 'login' ? 'Login' : 'Register' }}</h2>
       <button class="close-btn" (click)="onClose()">&times;</button>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+    <div class="auth-mode-switch">
+      <button type="button" [class.active]="mode === 'login'" (click)="setMode('login')">
+        Login
+      </button>
+      <button type="button" [class.active]="mode === 'register'" (click)="setMode('register')">
+        Register
+      </button>
+    </div>
+
+    <form [formGroup]="authForm" (ngSubmit)="onSubmit()" class="login-form">
+      @if (mode === 'register') {
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            placeholder="Choose a username"
+            [class.error]="authForm.get('username')?.invalid && authForm.get('username')?.touched"
+          />
+          @if (authForm.get('username')?.invalid && authForm.get('username')?.touched) {
+            <span class="error-text">Username (min 3 chars) is required</span>
+          }
+        </div>
+      }
+
       <div class="form-group">
         <label for="usernameOrEmail">Email</label>
         <input
@@ -14,12 +39,10 @@
           formControlName="usernameOrEmail"
           placeholder="Enter email"
           [class.error]="
-            loginForm.get('usernameOrEmail')?.invalid && loginForm.get('usernameOrEmail')?.touched
+            authForm.get('usernameOrEmail')?.invalid && authForm.get('usernameOrEmail')?.touched
           "
         />
-        @if (
-          loginForm.get('usernameOrEmail')?.invalid && loginForm.get('usernameOrEmail')?.touched
-        ) {
+        @if (authForm.get('usernameOrEmail')?.invalid && authForm.get('usernameOrEmail')?.touched) {
           <span class="error-text">Valid email is required</span>
         }
       </div>
@@ -31,24 +54,62 @@
           type="password"
           formControlName="password"
           placeholder="Enter password"
-          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+          [class.error]="authForm.get('password')?.invalid && authForm.get('password')?.touched"
         />
-        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+        @if (authForm.get('password')?.invalid && authForm.get('password')?.touched) {
           <span class="error-text">Password is required</span>
         }
       </div>
 
+      @if (mode === 'register') {
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirm password"
+            [class.error]="
+              authForm.get('confirmPassword')?.invalid && authForm.get('confirmPassword')?.touched
+            "
+          />
+          @if (
+            authForm.get('confirmPassword')?.invalid && authForm.get('confirmPassword')?.touched
+          ) {
+            <span class="error-text">Please confirm your password</span>
+          }
+        </div>
+      }
+
       @if (errorMessage) {
         <div class="error-message">{{ errorMessage }}</div>
+      }
+
+      @if (successMessage) {
+        <div class="success-message">{{ successMessage }}</div>
       }
 
       <button type="submit" class="login-btn" [disabled]="isLoading">
         @if (isLoading) {
           <span>Loading...</span>
         } @else {
-          <span>Login</span>
+          <span>{{ mode === 'login' ? 'Login' : 'Create account' }}</span>
         }
       </button>
+
+      <div class="auth-hint">
+        @if (mode === 'login') {
+          <span>
+            New here?
+            <button type="button" class="link-btn" (click)="setMode('register')">Register</button>
+          </span>
+        } @else {
+          <span>
+            Already have an account?
+            <button type="button" class="link-btn" (click)="setMode('login')">Login</button>
+          </span>
+        }
+      </div>
     </form>
   </div>
 </div>
