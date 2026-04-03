@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Crypto } from '../../../core/models/crypto.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { FavoritesService } from '../../../core/services/favorites.service';
 import { NumberSignPipe } from '../../../shared/pipes/number-sign.pipe';
 
@@ -17,7 +18,10 @@ export class CryptoCardComponent {
   @Input() isFavorite = false;
   @Input() favoritesService: FavoritesService | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+  ) {}
 
   navigateToDetail(): void {
     this.router.navigate(['/crypto', this.crypto.id]);
@@ -25,8 +29,23 @@ export class CryptoCardComponent {
 
   toggleFavorite(event: Event): void {
     event.stopPropagation();
-    if (this.favoritesService) {
-      this.favoritesService.toggleFavorite(this.crypto.id).subscribe();
+    if (!this.favoritesService) {
+      return;
     }
+
+    this.authService.validateSession().subscribe((user) => {
+      if (!user) {
+        this.router.navigate(['/'], {
+          queryParams: {
+            login: '1',
+            redirectTo: this.router.url,
+          },
+          queryParamsHandling: 'merge',
+        });
+        return;
+      }
+
+      this.favoritesService?.toggleFavorite(this.crypto.id).subscribe();
+    });
   }
 }

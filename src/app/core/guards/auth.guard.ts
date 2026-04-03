@@ -7,10 +7,6 @@ export const authGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isLoggedIn()) {
-    return of(true);
-  }
-
   if (!authService.getAccessToken()) {
     return of(
       router.createUrlTree(['/'], {
@@ -22,7 +18,7 @@ export const authGuard: CanActivateFn = (_route, state) => {
     );
   }
 
-  return authService.initSession().pipe(
+  return authService.validateSession().pipe(
     map((user) => {
       if (user) {
         return true;

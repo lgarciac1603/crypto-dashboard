@@ -35,6 +35,11 @@ interface MeResponse {
   avatar?: string;
 }
 
+interface ValidateSessionResponse {
+  valid: boolean;
+  user?: MeResponse;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -132,11 +137,31 @@ export class AuthService {
   }
 
   initSession(): Observable<User | null> {
+    return this.validateSession();
+  }
+
+  validateSession(): Observable<User | null> {
     if (!this.getAccessToken()) {
+      this.clearSession();
       return of(null);
     }
 
-    return this.getMe().pipe(
+    return this.http.get<ValidateSessionResponse>(`${API_BASE_URL}/validate-session`).pipe(
+      map((response) => {
+        if (!response.valid || !response.user) {
+          return null;
+        }
+
+        return this.mapUser(response.user);
+      }),
+      tap((user) => {
+        if (user) {
+          this.currentUserSubject.next(user);
+          return;
+        }
+
+        this.clearSession();
+      }),
       catchError(() => {
         this.clearSession();
         return of(null);

@@ -7,10 +7,6 @@ export const guestGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isLoggedIn()) {
-    return of(router.createUrlTree(['/']));
-  }
-
   if (!authService.getAccessToken()) {
     return of(
       router.createUrlTree(['/'], {
@@ -21,7 +17,7 @@ export const guestGuard: CanActivateFn = () => {
     );
   }
 
-  return authService.initSession().pipe(
+  return authService.validateSession().pipe(
     map((user) => {
       if (user) {
         return router.createUrlTree(['/']);
