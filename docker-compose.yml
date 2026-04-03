@@ -1,0 +1,92 @@
+version: '3.9'
+
+services:
+  # Frontend - Crypto Dashboard
+  crypto-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crypto-dashboard
+    ports:
+      - '4200:80'
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - cpp-rest-api
+      - favorites-api
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Backend - C++ REST API
+  cpp-rest-api:
+    build:
+      context: ../cpp-rest-api
+      dockerfile: Dockerfile
+    container_name: cpp-rest-api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: apidb
+      DB_USER: apiuser_test
+      DB_PASS: apipass_test
+    ports:
+      - '8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Favorites Service - Go API
+  favorites-api:
+    build:
+      context: ../favorites-api
+      dockerfile: Dockerfile
+    container_name: favorites-api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_NAME: apidb
+      DB_USER: apiuser_test
+      DB_PASS: apipass_test
+      APP_PORT: '8090'
+    ports:
+      - '8090:8090'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: app-postgres
+    environment:
+      POSTGRES_DB: apidb
+      POSTGRES_USER: apiuser_test
+      POSTGRES_PASSWORD: apipass_test
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U apiuser_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# Networks
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  postgres_data:
