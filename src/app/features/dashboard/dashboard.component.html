@@ -2,7 +2,30 @@
   <div class="dashboard-header">
     <p class="subtitle">Live market data and trending coins</p>
   </div>
-  <div class="grid">
-    <app-crypto-card *ngFor="let c of cryptos" [crypto]="c"></app-crypto-card>
+
+  @if (isLoggedIn && favoriteCryptos.length > 0) {
+    <div class="favorites-section">
+      <h2 class="section-title">⭐ Your Favorites</h2>
+      <div class="favorites-grid">
+        <app-crypto-card
+          *ngFor="let c of favoriteCryptos"
+          [crypto]="c"
+          [isFavorite]="true"
+          [favoritesService]="favoritesService"
+        ></app-crypto-card>
+      </div>
+    </div>
+  }
+
+  <div class="trending-section">
+    <h2 class="section-title">📈 Trending Coins</h2>
+    <div class="grid">
+      <app-crypto-card
+        *ngFor="let c of cryptos"
+        [crypto]="c"
+        [isFavorite]="favoritesService.isFavorite(c.id)"
+        [favoritesService]="favoritesService"
+      ></app-crypto-card>
+    </div>
   </div>
 </section>

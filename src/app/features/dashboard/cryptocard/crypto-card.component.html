@@ -1,7 +1,19 @@
 <div class="crypto-card" (click)="navigateToDetail()">
-  <img [src]="crypto.image" [alt]="crypto.name" />
+  <div class="card-header">
+    <img [src]="crypto.image" [alt]="crypto.name" />
+    @if (favoritesService) {
+      <button
+        class="favorite-btn"
+        [class.active]="isFavorite"
+        (click)="toggleFavorite($event)"
+        [title]="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+      >
+        {{ isFavorite ? '⭐' : '☆' }}
+      </button>
+    }
+  </div>
   <h3>{{ crypto.name }}</h3>
-  <p class="price">${{ crypto.current_price | number : '1.2-2' }}</p>
+  <p class="price">${{ crypto.current_price | number: '1.2-2' }}</p>
   <p
     [class.positive]="crypto.price_change_percentage_24h > 0"
     [class.negative]="crypto.price_change_percentage_24h < 0"
