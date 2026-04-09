@@ -7,6 +7,7 @@ A modern, real-time cryptocurrency dashboard with dark theme and neon accents. B
 ## Features
 
 ### Modern UI Design
+
 - **Dark theme** with neon cyan and magenta accents
 - **Three-panel layout**:
   - Left sidebar with user profile and favorite cryptocurrencies
@@ -14,6 +15,7 @@ A modern, real-time cryptocurrency dashboard with dark theme and neon accents. B
   - Main content area with real-time crypto data
 
 ### Cryptocurrency Features
+
 - View top 10 cryptocurrencies by market cap
 - Real-time price updates (auto-refresh every 30 seconds)
 - Detailed crypto information including:
@@ -25,11 +27,13 @@ A modern, real-time cryptocurrency dashboard with dark theme and neon accents. B
 - Time period selection (Current, Week, Month, Year, 5 Years)
 
 ### User Management
+
 - Login/Logout functionality
 - User profile display in sidebar and app bar
 - Favorite cryptocurrencies quick access
 
 ### Real-Time Updates
+
 - Live data refresh every 30 seconds
 - Visual indicators for price changes (green for positive, red for negative)
 - Last update timestamp display
@@ -57,14 +61,22 @@ crypto-dashboard (Angular / nginx)   :4200
 
 ### Setup
 
+**0. Install app dependencies:**
+
+```powershell
+npm install
+```
+
 **1. Clone the backend services into `backend/`:**
 
 On Windows (PowerShell):
+
 ```powershell
 .\setup.ps1
 ```
 
 On Linux / macOS:
+
 ```bash
 bash setup.sh
 ```
@@ -79,11 +91,11 @@ docker compose up --build
 
 **3. Access the app:**
 
-| Service         | URL                       |
-|-----------------|---------------------------|
-| Frontend        | http://localhost:4200     |
-| Backend API     | http://localhost:8080     |
-| Favorites API   | http://localhost:8090     |
+| Service       | URL                   |
+| ------------- | --------------------- |
+| Frontend      | http://localhost:4200 |
+| Backend API   | http://localhost:8080 |
+| Favorites API | http://localhost:8090 |
 
 **Useful commands:**
 
@@ -117,10 +129,10 @@ DB_USER=apiuser_test
 DB_PASS=apipass_test
 ```
 
-| Variable           | Default                    | Description                        |
-|--------------------|----------------------------|------------------------------------|
-| `JWT_SECRET`       | `dev-secret-key`           | Secret for signing JWT tokens      |
-| `CORS_ALLOW_ORIGIN`| `http://localhost:4200`    | Allowed CORS origin for both APIs  |
+| Variable            | Default                 | Description                       |
+| ------------------- | ----------------------- | --------------------------------- |
+| `JWT_SECRET`        | `dev-secret-key`        | Secret for signing JWT tokens     |
+| `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin for both APIs |
 
 > Always set a strong `JWT_SECRET` in production.
 
@@ -146,6 +158,7 @@ Once the server is running, open your browser and navigate to `http://localhost:
 ## Design System
 
 ### Color Palette
+
 - **Background**: `#0a0a0f` (dark)
 - **Card Background**: `#12121a`
 - **Neon Cyan**: `#00f3ff`
