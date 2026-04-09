@@ -56,14 +56,43 @@ if (-Not (Test-Path "backend/favorites-api/.git")) {
     git -C backend/favorites-api pull
 }
 
-# ── Step 4: Write config.local.h from .env ───────────────────────────────────
+# ── Step 4: Write config files from .env ─────────────────────────────────────
 
-$configPath = "backend/cpp-rest-api/src/config/config.local.h"
-
+# config.h — used by Docker (reads from env vars at runtime, safe to commit)
+$configHPath = "backend/cpp-rest-api/src/config/config.h"
 Write-Host ""
-Write-Host "--> Writing $configPath from .env..." -ForegroundColor Yellow
+Write-Host "--> Writing $configHPath..." -ForegroundColor Yellow
+$configHContent = @"
+#pragma once
 
-$configContent = @"
+#include <cstdlib>
+#include <string>
+
+inline std::string get_env(const char* key, const char* default_val) {
+    const char* val = std::getenv(key);
+    return val ? val : default_val;
+}
+
+inline const char* get_env_cstr(const char* key, const char* default_val) {
+    const char* val = std::getenv(key);
+    return val ? val : default_val;
+}
+
+#define DB_HOST           get_env_cstr("DB_HOST",           "localhost")
+#define DB_PORT           get_env_cstr("DB_PORT",           "5432")
+#define DB_NAME           get_env_cstr("DB_NAME",           "apidb")
+#define DB_USER           get_env_cstr("DB_USER",           "apiuser_test")
+#define DB_PASS           get_env_cstr("DB_PASS",           "apipass_test")
+#define APP_PORT          get_env_cstr("APP_PORT",          "8080")
+#define JWT_SECRET        get_env("JWT_SECRET",             "dev-secret-key")
+#define CORS_ALLOW_ORIGIN get_env_cstr("CORS_ALLOW_ORIGIN", "http://localhost:4200")
+"@
+Set-Content -Path $configHPath -Value $configHContent -Encoding UTF8
+
+# config.local.h — used for native (non-Docker) builds, values from .env
+$configLocalPath = "backend/cpp-rest-api/src/config/config.local.h"
+Write-Host "--> Writing $configLocalPath from .env..." -ForegroundColor Yellow
+$configLocalContent = @"
 #pragma once
 
 #define DB_HOST "localhost"
@@ -75,8 +104,7 @@ $configContent = @"
 #define JWT_SECRET "$($envVars['JWT_SECRET'])"
 #define CORS_ALLOW_ORIGIN "$($envVars['CORS_ALLOW_ORIGIN'])"
 "@
-
-Set-Content -Path $configPath -Value $configContent -Encoding UTF8
+Set-Content -Path $configLocalPath -Value $configLocalContent -Encoding UTF8
 
 Write-Host ""
 Write-Host "==> Setup complete." -ForegroundColor Green

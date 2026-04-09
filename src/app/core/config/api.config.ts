@@ -1,6 +1,13 @@
+import { isDevMode } from '@angular/core';
+
 // Get API base URL from environment or use defaults
 function getApiBaseUrl(): string {
-  // Check for environment variable
+  // In development (ng serve), use proxy paths to avoid CORS
+  if (isDevMode()) {
+    return '/api-backend';
+  }
+
+  // Check for environment variable injected at runtime
   if (typeof (window as any).__API_BASE_URL__ !== 'undefined') {
     return (window as any).__API_BASE_URL__;
   }
@@ -8,18 +15,17 @@ function getApiBaseUrl(): string {
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
 
-  // Development environments
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:8080';
-  }
-
-  // Docker/Production - same host, different ports
   return `${protocol}//${hostname}:8080`;
 }
 
 // Get Favorites API URL from environment or use defaults
 function getFavoritesApiUrl(): string {
-  // Check for environment variable
+  // In development (ng serve), use proxy paths to avoid CORS
+  if (isDevMode()) {
+    return '/api-favorites';
+  }
+
+  // Check for environment variable injected at runtime
   if (typeof (window as any).__API_FAVORITES_URL__ !== 'undefined') {
     return (window as any).__API_FAVORITES_URL__;
   }
@@ -27,12 +33,6 @@ function getFavoritesApiUrl(): string {
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
 
-  // Development environments
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:8090';
-  }
-
-  // Docker/Production - same host, different ports
   return `${protocol}//${hostname}:8090`;
 }
 

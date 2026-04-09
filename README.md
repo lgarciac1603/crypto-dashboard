@@ -1,46 +1,158 @@
-# CryptoDashboard
+# Crypto Dashboard
 
-A modern, real-time cryptocurrency dashboard with dark theme and neon accents. Built with Angular 20.
+A modern, real-time cryptocurrency dashboard with dark theme and neon accents. Built with Angular 20, served via nginx, and fully orchestrated with Docker Compose alongside [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++ backend) and [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go microservice).
 
-> **Full stack**: This frontend is the entry point for the complete application. It orchestrates [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++ backend) and [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go microservice) via Docker Compose.
+> **Full stack entry point**: This repository is the starting point for the entire application. It clones and orchestrates the backend services automatically via the included setup scripts and `docker-compose.yml`. Running each service standalone is also supported.
 
-## Features
+---
 
-### Modern UI Design
+## Table of Contents
 
-- **Dark theme** with neon cyan and magenta accents
-- **Three-panel layout**:
-  - Left sidebar with user profile and favorite cryptocurrencies
-  - Top app bar with user information and login/logout
-  - Main content area with real-time crypto data
+1. [Overview](#overview)
+2. [Technology Stack](#technology-stack)
+3. [Prerequisites](#prerequisites)
+4. [Installation](#installation)
+5. [Configuration](#configuration)
+6. [Project Structure](#project-structure)
+7. [Full Stack Deployment](#full-stack-deployment)
+8. [Running Locally](#running-locally)
+9. [Building](#building)
+10. [Testing](#testing)
+11. [API Integration](#api-integration)
+12. [Design System](#design-system)
+13. [Contributing](#contributing)
+14. [License](#license)
+15. [Roadmap](#roadmap)
 
-### Cryptocurrency Features
+---
 
-- View top 10 cryptocurrencies by market cap
-- Real-time price updates (auto-refresh every 30 seconds)
-- Detailed crypto information including:
-  - Current price and 24h change percentage
-  - Market cap and trading volume
-  - 24h high/low prices
-  - All-time high/low
-  - Circulating supply
-- Time period selection (Current, Week, Month, Year, 5 Years)
+## Overview
 
-### User Management
+Crypto Dashboard is an Angular 20 single-page application that displays real-time cryptocurrency data and lets authenticated users persist their favorite coins. It communicates with two backend services:
 
-- Login/Logout functionality
-- User profile display in sidebar and app bar
-- Favorite cryptocurrencies quick access
+- **[cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api)** — C++ REST API that handles user registration, authentication, and JWT session management.
+- **[favorites-api](https://github.com/lgarciac1603/favorites-api)** — Go microservice that manages each user's list of favorite cryptocurrencies.
 
-### Real-Time Updates
+Core features:
 
-- Live data refresh every 30 seconds
-- Visual indicators for price changes (green for positive, red for negative)
-- Last update timestamp display
+- View the top 10 cryptocurrencies by market cap with live price updates every 30 seconds.
+- Detailed crypto view: current price, 24h change, market cap, volume, 24h high/low, ATH/ATL, and circulating supply.
+- Time period selector: Current, Week, Month, Year, 5 Years.
+- User login/logout with JWT-based session handling.
+- Persistent favorites list synced to the backend — add or remove coins from any view.
+- Visual price indicators: green for gains, red for losses, with last-updated timestamp.
 
-## Full Stack Deployment (Docker)
+---
 
-This is the recommended way to run the entire application — frontend, backend, and microservice — with a single command.
+## Technology Stack
+
+| Component      | Technology                                             | Version |
+| -------------- | ------------------------------------------------------ | ------- |
+| Language       | TypeScript                                             | 5.x     |
+| Framework      | Angular                                                | 20      |
+| Styles         | SCSS                                                   | —       |
+| HTTP Client    | Angular `HttpClient` + RxJS                            | —       |
+| Web Server     | nginx                                                  | alpine  |
+| Container      | Docker / Docker Compose                                | 26+     |
+| Crypto Data    | [CoinGecko API](https://www.coingecko.com/en/api)      | v3      |
+| Auth Backend   | [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++) | — |
+| Favorites API  | [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go) | — |
+
+---
+
+## Prerequisites
+
+Before running this project, ensure the following are installed:
+
+- **Node.js 20+** and **npm** — [https://nodejs.org](https://nodejs.org)
+- **Angular CLI** — `npm install -g @angular/cli`
+- **Docker Desktop** (for full stack) — [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
+- **Git** — [https://git-scm.com/downloads](https://git-scm.com/downloads)
+
+---
+
+## Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/lgarciac1603/crypto-dashboard.git
+cd crypto-dashboard
+
+# 2. Install frontend dependencies
+npm install
+
+# 3. Run the setup script to clone backend services and generate config files
+# Windows (PowerShell):
+.\setup.ps1
+
+# Linux / macOS:
+bash setup.sh
+```
+
+> On the first run, the setup script creates `.env` from `.env.example` and exits. Fill in your values, then re-run the script. On subsequent runs it clones `cpp-rest-api` and `favorites-api` into `backend/` and generates all required config files.
+
+---
+
+## Configuration
+
+All backend configuration is driven by a single `.env` file at the root of this repository. The setup script creates it from `.env.example` automatically on first run.
+
+```bash
+cp .env.example .env
+```
+
+| Variable            | Default                 | Description                              |
+| ------------------- | ----------------------- | ---------------------------------------- |
+| `JWT_SECRET`        | `dev-secret-key`        | Secret used to sign and verify JWT tokens |
+| `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin for both backend APIs |
+| `DB_NAME`           | `apidb`                 | PostgreSQL database name                 |
+| `DB_USER`           | `apiuser_test`          | PostgreSQL user                          |
+| `DB_PASS`           | `apipass_test`          | PostgreSQL password                      |
+
+> Always use a strong, random `JWT_SECRET` in any non-local environment.
+
+When the setup script runs, it writes these values into:
+- `backend/cpp-rest-api/src/config/config.h` — runtime config for the Docker build (reads env vars).
+- `backend/cpp-rest-api/src/config/config.local.h` — hardcoded config for native builds.
+
+---
+
+## Project Structure
+
+```
+crypto-dashboard/
+├── backend/                        # Git-ignored; populated by setup scripts
+│   ├── cpp-rest-api/               # C++ auth & user management backend
+│   └── favorites-api/              # Go favorites microservice
+├── src/
+│   ├── app/
+│   │   ├── core/
+│   │   │   ├── config/             # API base URLs
+│   │   │   ├── interceptors/       # HTTP interceptors (auth token injection)
+│   │   │   ├── models/             # TypeScript interfaces / data models
+│   │   │   └── services/           # API services (auth, crypto, favorites)
+│   │   ├── features/
+│   │   │   ├── dashboard/          # Main dashboard view
+│   │   │   └── crypto-detail/      # Detailed crypto view
+│   │   └── shared/                 # Shared components and pipes
+│   └── styles.scss                 # Global styles and design tokens
+├── .env.example                    # Template for environment variables
+├── .gitignore
+├── docker-compose.yml              # Full stack orchestration (4 services)
+├── Dockerfile                      # Multi-stage build: Angular → nginx
+├── nginx.conf                      # nginx config with API reverse proxies
+├── setup.ps1                       # Windows setup script
+├── setup.sh                        # Linux/macOS setup script
+├── angular.json
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## Full Stack Deployment
+
+This is the recommended way to run the entire application. A single command builds and starts all four services.
 
 ### Architecture
 
@@ -54,42 +166,18 @@ crypto-dashboard (Angular / nginx)   :4200
         +-- PostgreSQL 16             :5432   ← shared database
 ```
 
-### Prerequisites
-
-- [Docker Desktop](https://docs.docker.com/get-docker/) installed and running
-- [Git](https://git-scm.com/downloads)
-
-### Setup
-
-**0. Install app dependencies:**
-
-```powershell
-npm install
-```
-
-**1. Clone the backend services into `backend/`:**
-
-On Windows (PowerShell):
-
-```powershell
-.\setup.ps1
-```
-
-On Linux / macOS:
+### Steps
 
 ```bash
-bash setup.sh
-```
+# 1. Run the setup script (first time only — sets up .env and clones backends)
+.\setup.ps1        # Windows
+bash setup.sh      # Linux / macOS
 
-> The script checks for a `.env` file. If none exists, it creates one from `.env.example` and exits — edit the file with your values, then re-run the script. On subsequent runs it clones the backend repos and generates `config.local.h` inside `cpp-rest-api` from your `.env` values.
-
-**2. Start the full stack:**
-
-```bash
+# 2. Build and start all services
 docker compose up --build
 ```
 
-**3. Access the app:**
+Access the services:
 
 | Service       | URL                   |
 | ------------- | --------------------- |
@@ -97,131 +185,126 @@ docker compose up --build
 | Backend API   | http://localhost:8080 |
 | Favorites API | http://localhost:8090 |
 
-**Useful commands:**
+### Useful commands
 
 ```bash
 # Run in background
 docker compose up --build -d
 
-# View logs
+# Stream logs from all services
 docker compose logs -f
 
-# Stop everything
+# Stop all services
 docker compose down
 
-# Stop and wipe the database
+# Stop and wipe the database volume
 docker compose down -v
 ```
 
-### Environment Variables
-
-Copy `.env.example` to `.env` (the setup script does this automatically on first run) and edit your values:
-
-```bash
-cp .env.example .env
-```
-
-```env
-JWT_SECRET=your-production-secret
-CORS_ALLOW_ORIGIN=http://localhost:4200
-DB_NAME=apidb
-DB_USER=apiuser_test
-DB_PASS=apipass_test
-```
-
-| Variable            | Default                 | Description                       |
-| ------------------- | ----------------------- | --------------------------------- |
-| `JWT_SECRET`        | `dev-secret-key`        | Secret for signing JWT tokens     |
-| `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin for both APIs |
-
-> Always set a strong `JWT_SECRET` in production.
-
 ### How it works
 
-1. `setup.ps1` / `setup.sh` clones `cpp-rest-api` and `favorites-api` into `backend/`. The `backend/` folder is git-ignored and never committed.
-2. `docker compose up` builds all four services from source and starts them on a shared `app-network`.
-3. `cpp-rest-api` applies all database migrations automatically on first start.
-4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via internal Docker DNS (`http://cpp-rest-api:8080`).
+1. `setup.ps1` / `setup.sh` clones `cpp-rest-api` and `favorites-api` into `backend/` and generates the C++ config headers from your `.env`. The `backend/` folder is git-ignored and never committed.
+2. `docker compose up` builds all four images from source and connects them on a shared `app-network`.
+3. `cpp-rest-api` applies all database migrations automatically on startup.
+4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via Docker DNS (`http://cpp-rest-api:8080`).
+5. nginx proxies all `/api/` requests to `cpp-rest-api` and `/favorites/` requests to `favorites-api`, so the browser only talks to port `4200`.
 
 ---
 
-## 🛠 Development server
+## Running Locally
 
-To start a local development server, run:
+To run only the Angular dev server (without Docker):
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200/`. The app hot-reloads on file changes.
 
-## Design System
+> For full functionality (login, favorites) the backend services must also be running. See the standalone instructions in each backend's README.
 
-### Color Palette
+### Code scaffolding
 
-- **Background**: `#0a0a0f` (dark)
-- **Card Background**: `#12121a`
-- **Neon Cyan**: `#00f3ff`
-- **Neon Magenta**: `#ff00ff`
-- **Neon Green**: `#39ff14` (positive changes)
-- **Text Primary**: `#e8e8ff`
-- **Text Secondary**: `#9b9bb5`
+```bash
+# Generate a new component
+ng generate component component-name
 
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── models/          # Data models
-│   │   └── services/        # API services
-│   ├── features/
-│   │   ├── dashboard/       # Main dashboard view
-│   │   └── crypto-detail/   # Detailed crypto view
-│   └── shared/              # Shared components and pipes
-└── styles.scss              # Global styles
+# List all available schematics
+ng generate --help
 ```
 
-## API
-
-This application uses the [CoinGecko API](https://www.coingecko.com/en/api) to fetch real-time cryptocurrency data.
+---
 
 ## Building
-
-To build the project run:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Build artifacts are written to `dist/`. The production build is optimized for performance. The Docker image runs this build behind nginx automatically.
 
-## Running unit tests
+---
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Testing
 
 ```bash
+# Run unit tests with Karma
 ng test
 ```
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## API Integration
 
-```bash
-ng generate component component-name
-```
+The frontend integrates with two backend APIs and one external service:
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+| Service       | Base URL              | Purpose                         |
+| ------------- | --------------------- | ------------------------------- |
+| cpp-rest-api  | `http://localhost:8080` | User auth, sessions, JWT        |
+| favorites-api | `http://localhost:8090` | Add / remove / list favorites   |
+| CoinGecko     | `https://api.coingecko.com/api/v3` | Live crypto market data |
 
-```bash
-ng generate --help
-```
+The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>` header to all requests targeting either backend service.
 
-## Additional Resources
+---
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Design System
+
+### Color Palette
+
+| Token           | Value       | Usage                        |
+| --------------- | ----------- | ---------------------------- |
+| Background      | `#0a0a0f`   | Page background              |
+| Card Background | `#12121a`   | Card and panel surfaces      |
+| Neon Cyan       | `#00f3ff`   | Primary accent, highlights   |
+| Neon Magenta    | `#ff00ff`   | Secondary accent             |
+| Neon Green      | `#39ff14`   | Positive price changes       |
+| Text Primary    | `#e8e8ff`   | Main readable text           |
+| Text Secondary  | `#9b9bb5`   | Labels, subtitles            |
+
+---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit your changes: `git commit -m "feat: add your feature"`.
+4. Push to the branch: `git push origin feature/your-feature`.
+5. Open a pull request.
+
+---
 
 ## License
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.9.
+This project is open source. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Roadmap
+
+- [ ] Portfolio view with allocation breakdown
+- [ ] Price alert notifications
+- [ ] Dark/light theme toggle
+- [ ] Pagination or infinite scroll for coin list
+- [ ] Expanded time period charts with Chart.js or D3
+- [ ] PWA support for offline mode

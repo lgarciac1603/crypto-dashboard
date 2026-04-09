@@ -2,11 +2,13 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { API_BASE_URL } from '../config/api.config';
+import { API_BASE_URL, API_FAVORITES_URL } from '../config/api.config';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
-  const isApiRequest = request.url.startsWith(API_BASE_URL);
+  const isApiRequest =
+    request.url.startsWith(API_BASE_URL) ||
+    request.url.startsWith(API_FAVORITES_URL);
 
   if (!isApiRequest) {
     return next(request);
