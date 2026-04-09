@@ -27,9 +27,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: '5432'
-      DB_NAME: apidb
-      DB_USER: apiuser_test
-      DB_PASS: apipass_test
+      DB_NAME: ${DB_NAME:-apidb}
+      DB_USER: ${DB_USER:-apiuser_test}
+      DB_PASS: ${DB_PASS:-apipass_test}
       APP_PORT: '8080'
       JWT_SECRET: ${JWT_SECRET:-dev-secret-key}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-http://localhost:4200}
@@ -51,9 +51,9 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: '5432'
-      DB_NAME: apidb
-      DB_USER: apiuser_test
-      DB_PASS: apipass_test
+      DB_NAME: ${DB_NAME:-apidb}
+      DB_USER: ${DB_USER:-apiuser_test}
+      DB_PASS: ${DB_PASS:-apipass_test}
       APP_PORT: '8090'
       AUTH_API_URL: http://cpp-rest-api:8080
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-http://localhost:4200}
@@ -73,9 +73,9 @@ services:
     image: postgres:16-alpine
     container_name: app-postgres
     environment:
-      POSTGRES_DB: apidb
-      POSTGRES_USER: apiuser_test
-      POSTGRES_PASSWORD: apipass_test
+      POSTGRES_DB: ${DB_NAME:-apidb}
+      POSTGRES_USER: ${DB_USER:-apiuser_test}
+      POSTGRES_PASSWORD: ${DB_PASS:-apipass_test}
     ports:
       - '5432:5432'
     volumes:

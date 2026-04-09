@@ -61,15 +61,15 @@ crypto-dashboard (Angular / nginx)   :4200
 
 On Windows (PowerShell):
 ```powershell
-.\setup.ps1 -CppRestApiRepo "https://github.com/lgarciac1603/cpp-rest-api.git" `
-            -FavoritesApiRepo "https://github.com/lgarciac1603/favorites-api.git"
+.\setup.ps1
 ```
 
 On Linux / macOS:
 ```bash
 bash setup.sh
-# Edit CPP_REST_API_REPO and FAVORITES_API_REPO in the script first
 ```
+
+> The script checks for a `.env` file. If none exists, it creates one from `.env.example` and exits — edit the file with your values, then re-run the script. On subsequent runs it clones the backend repos and generates `config.local.h` inside `cpp-rest-api` from your `.env` values.
 
 **2. Start the full stack:**
 
@@ -103,11 +103,18 @@ docker compose down -v
 
 ### Environment Variables
 
-You can override defaults by creating a `.env` file in this directory:
+Copy `.env.example` to `.env` (the setup script does this automatically on first run) and edit your values:
+
+```bash
+cp .env.example .env
+```
 
 ```env
 JWT_SECRET=your-production-secret
 CORS_ALLOW_ORIGIN=http://localhost:4200
+DB_NAME=apidb
+DB_USER=apiuser_test
+DB_PASS=apipass_test
 ```
 
 | Variable           | Default                    | Description                        |

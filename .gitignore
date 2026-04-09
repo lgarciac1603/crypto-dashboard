@@ -44,3 +44,6 @@ Thumbs.db
 
 # Backend submodules (cloned via setup script)
 /backend/
+
+# Local environment — never commit secrets
+.env
