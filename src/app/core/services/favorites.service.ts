@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { API_FAVORITES_URL } from '../config/api.config';
 
 @Injectable({
@@ -14,7 +14,8 @@ export class FavoritesService {
   constructor(private http: HttpClient) {}
 
   getFavorites(): Observable<string[]> {
-    return this.http.get<string[]>(`${API_FAVORITES_URL}/favorites`).pipe(
+    return this.http.get<{ data: Array<{ cryptoId: string }> }>(`${API_FAVORITES_URL}/favorites`).pipe(
+      map((response) => response.data?.map((f) => f.cryptoId) ?? []),
       tap((ids) => this.favoritesSubject.next(ids)),
       catchError(() => {
         this.favoritesSubject.next([]);
@@ -23,8 +24,8 @@ export class FavoritesService {
     );
   }
 
-  addFavorite(cryptoId: string): Observable<void> {
-    const body = new HttpParams().set('crypto_id', cryptoId);
+  addFavorite(cryptoId: string, cryptoName: string): Observable<void> {
+    const body = new HttpParams().set('crypto_id', cryptoId).set('crypto_name', cryptoName);
 
     return this.http
       .post<void>(`${API_FAVORITES_URL}/favorites`, body.toString(), {
@@ -61,10 +62,10 @@ export class FavoritesService {
     return this.favoritesSubject.value.includes(cryptoId);
   }
 
-  toggleFavorite(cryptoId: string): Observable<void> {
+  toggleFavorite(cryptoId: string, cryptoName: string): Observable<void> {
     if (this.isFavorite(cryptoId)) {
       return this.removeFavorite(cryptoId);
     }
-    return this.addFavorite(cryptoId);
+    return this.addFavorite(cryptoId, cryptoName);
   }
 }

@@ -29,23 +29,16 @@ export class CryptoCardComponent {
 
   toggleFavorite(event: Event): void {
     event.stopPropagation();
-    if (!this.favoritesService) {
+    if (!this.favoritesService) return;
+
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/'], {
+        queryParams: { login: '1', redirectTo: this.router.url },
+        queryParamsHandling: 'merge',
+      });
       return;
     }
 
-    this.authService.validateSession().subscribe((user) => {
-      if (!user) {
-        this.router.navigate(['/'], {
-          queryParams: {
-            login: '1',
-            redirectTo: this.router.url,
-          },
-          queryParamsHandling: 'merge',
-        });
-        return;
-      }
-
-      this.favoritesService?.toggleFavorite(this.crypto.id).subscribe();
-    });
+    this.favoritesService.toggleFavorite(this.crypto.id, this.crypto.name).subscribe();
   }
 }
