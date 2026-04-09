@@ -21,7 +21,7 @@ services:
   # Backend - C++ REST API
   cpp-rest-api:
     build:
-      context: ../cpp-rest-api
+      context: ./backend/cpp-rest-api
       dockerfile: Dockerfile
     container_name: cpp-rest-api
     environment:
@@ -30,6 +30,9 @@ services:
       DB_NAME: apidb
       DB_USER: apiuser_test
       DB_PASS: apipass_test
+      APP_PORT: '8080'
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key}
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-http://localhost:4200}
     ports:
       - '8080:8080'
     depends_on:
@@ -39,10 +42,10 @@ services:
       - app-network
     restart: unless-stopped
 
-  # Favorites Service - Go API
+  # Favorites Microservice - Go API
   favorites-api:
     build:
-      context: ../favorites-api
+      context: ./backend/favorites-api
       dockerfile: Dockerfile
     container_name: favorites-api
     environment:
@@ -52,11 +55,15 @@ services:
       DB_USER: apiuser_test
       DB_PASS: apipass_test
       APP_PORT: '8090'
+      AUTH_API_URL: http://cpp-rest-api:8080
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-http://localhost:4200}
     ports:
       - '8090:8090'
     depends_on:
       postgres:
         condition: service_healthy
+      cpp-rest-api:
+        condition: service_started
     networks:
       - app-network
     restart: unless-stopped
