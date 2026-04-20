@@ -110,8 +110,11 @@ cp .env.example .env
 | `DB_NAME`           | `apidb`                 | PostgreSQL database name                 |
 | `DB_USER`           | `apiuser_test`          | PostgreSQL user                          |
 | `DB_PASS`           | `apipass_test`          | PostgreSQL password                      |
+| `COINGECKO_API_KEY` | empty                   | Optional CoinGecko API key for setups that use authenticated CoinGecko access |
 
 > Always use a strong, random `JWT_SECRET` in any non-local environment.
+
+> `COINGECKO_API_KEY` is optional. The current stack works without it, but keeping it in `.env` is useful if `cache-proxy-api` or related integrations later need authenticated CoinGecko access.
 
 When the setup script runs, it writes these values into:
 - `backend/cpp-rest-api/src/config/config.h` — runtime config for the Docker build (reads env vars).
@@ -270,6 +273,8 @@ The frontend integrates with three backend APIs/services:
 | cpp-rest-api  | `http://localhost:8080` | User auth, sessions, JWT        |
 | favorites-api | `http://localhost:8090` | Add / remove / list favorites   |
 | cache-proxy-api | `/api-cache`         | Market-data proxy + cache entry point |
+
+CoinGecko remains an optional upstream dependency behind `cache-proxy-api`. In the current setup, the dashboard talks to `/api-cache`, and the proxy decides whether or not it needs CoinGecko-specific configuration such as an API key.
 
 The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>` header to all requests targeting either backend service that requires auth.
 
