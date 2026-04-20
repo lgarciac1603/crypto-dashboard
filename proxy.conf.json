@@ -10,5 +10,11 @@
     "secure": false,
     "pathRewrite": { "^/api-favorites": "" },
     "changeOrigin": true
+  },
+  "/api-cache": {
+    "target": "http://localhost:8070",
+    "secure": false,
+    "pathRewrite": { "^/api-cache": "" },
+    "changeOrigin": true
   }
 }

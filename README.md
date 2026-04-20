@@ -1,6 +1,6 @@
 # Crypto Dashboard
 
-A modern, real-time cryptocurrency dashboard with dark theme and neon accents. Built with Angular 20, served via nginx, and fully orchestrated with Docker Compose alongside [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++ backend) and [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go microservice).
+A modern, real-time cryptocurrency dashboard with dark theme and neon accents. Built with Angular 20, served via nginx, and fully orchestrated with Docker Compose alongside [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++ backend), [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go microservice), and [cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api) (Rust microservice).
 
 > **Full stack entry point**: This repository is the starting point for the entire application. It clones and orchestrates the backend services automatically via the included setup scripts and `docker-compose.yml`. Running each service standalone is also supported.
 
@@ -28,10 +28,11 @@ A modern, real-time cryptocurrency dashboard with dark theme and neon accents. B
 
 ## Overview
 
-Crypto Dashboard is an Angular 20 single-page application that displays real-time cryptocurrency data and lets authenticated users persist their favorite coins. It communicates with two backend services:
+Crypto Dashboard is an Angular 20 single-page application that displays real-time cryptocurrency data and lets authenticated users persist their favorite coins. It communicates with three backend services:
 
 - **[cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api)** — C++ REST API that handles user registration, authentication, and JWT session management.
 - **[favorites-api](https://github.com/lgarciac1603/favorites-api)** — Go microservice that manages each user's list of favorite cryptocurrencies.
+- **[cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api)** — Rust microservice that fronts market-data providers and will host response caching behind Redis.
 
 Core features:
 
@@ -57,6 +58,7 @@ Core features:
 | Crypto Data    | [CoinGecko API](https://www.coingecko.com/en/api)      | v3      |
 | Auth Backend   | [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++) | — |
 | Favorites API  | [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go) | — |
+| Cache Proxy    | [cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api) (Rust) | — |
 
 ---
 
@@ -89,7 +91,7 @@ npm install
 bash setup.sh
 ```
 
-> On the first run, the setup script creates `.env` from `.env.example` and exits. Fill in your values, then re-run the script. On subsequent runs it clones `cpp-rest-api` and `favorites-api` into `backend/` and generates all required config files.
+> On the first run, the setup script creates `.env` from `.env.example` and exits. Fill in your values, then re-run the script. On subsequent runs it clones `cpp-rest-api`, `favorites-api`, and `cache-proxy-api` into `backend/` and generates all required config files.
 
 ---
 
@@ -123,7 +125,8 @@ When the setup script runs, it writes these values into:
 crypto-dashboard/
 ├── backend/                        # Git-ignored; populated by setup scripts
 │   ├── cpp-rest-api/               # C++ auth & user management backend
-│   └── favorites-api/              # Go favorites microservice
+│   ├── favorites-api/              # Go favorites microservice
+│   └── cache-proxy-api/            # Rust cache proxy microservice
 ├── src/
 │   ├── app/
 │   │   ├── core/
@@ -152,7 +155,7 @@ crypto-dashboard/
 
 ## Full Stack Deployment
 
-This is the recommended way to run the entire application. A single command builds and starts all four services.
+This is the recommended way to run the entire application. A single command builds and starts the frontend plus all backend services.
 
 ### Architecture
 
@@ -162,6 +165,8 @@ crypto-dashboard (Angular / nginx)   :4200
         +-- cpp-rest-api (C++)        :8080   ← user auth & sessions
         |
         +-- favorites-api (Go)        :8090   ← crypto favorites microservice
+        |
+        +-- cache-proxy-api (Rust)    :8070   ← provider proxy + Redis-backed cache
         |
         +-- PostgreSQL 16             :5432   ← shared database
 ```
@@ -184,6 +189,7 @@ Access the services:
 | Frontend      | http://localhost:4200 |
 | Backend API   | http://localhost:8080 |
 | Favorites API | http://localhost:8090 |
+| Cache Proxy   | http://localhost:4200/api-cache |
 
 ### Useful commands
 
@@ -203,11 +209,12 @@ docker compose down -v
 
 ### How it works
 
-1. `setup.ps1` / `setup.sh` clones `cpp-rest-api` and `favorites-api` into `backend/` and generates the C++ config headers from your `.env`. The `backend/` folder is git-ignored and never committed.
-2. `docker compose up` builds all four images from source and connects them on a shared `app-network`.
+1. `setup.ps1` / `setup.sh` clones `cpp-rest-api`, `favorites-api`, and `cache-proxy-api` into `backend/` and generates the C++ config headers from your `.env`. The `backend/` folder is git-ignored and never committed.
+2. `docker compose up` builds all images from source and connects them on a shared `app-network`.
 3. `cpp-rest-api` applies all database migrations automatically on startup.
 4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via Docker DNS (`http://cpp-rest-api:8080`).
-5. nginx proxies all `/api/` requests to `cpp-rest-api` and `/favorites/` requests to `favorites-api`, so the browser only talks to port `4200`.
+5. `cache-proxy-api` runs as the Rust market-data proxy, reading its route configuration from `backend/cache-proxy-api/src/config/proxy-config.json` mounted into the container at runtime.
+6. nginx proxies `/api-cache/` requests to `cache-proxy-api`, so the browser only talks to port `4200` for market data.
 
 ---
 
@@ -256,15 +263,15 @@ ng test
 
 ## API Integration
 
-The frontend integrates with two backend APIs and one external service:
+The frontend integrates with three backend APIs/services:
 
 | Service       | Base URL              | Purpose                         |
 | ------------- | --------------------- | ------------------------------- |
 | cpp-rest-api  | `http://localhost:8080` | User auth, sessions, JWT        |
 | favorites-api | `http://localhost:8090` | Add / remove / list favorites   |
-| CoinGecko     | `https://api.coingecko.com/api/v3` | Live crypto market data |
+| cache-proxy-api | `/api-cache`         | Market-data proxy + cache entry point |
 
-The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>` header to all requests targeting either backend service.
+The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>` header to all requests targeting either backend service that requires auth.
 
 ---
 

@@ -11,5 +11,6 @@
       "database": "apidb",
       "username": "apiuser_test"
     }
-  ]
+  ],
+  "cmake.sourceDirectory": "D:/Code/crypto-dashboard/backend/cpp-rest-api"
 }

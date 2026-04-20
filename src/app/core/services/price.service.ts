@@ -4,30 +4,28 @@ import { Observable, of } from 'rxjs';
 import { map, shareReplay, tap } from 'rxjs/operators';
 import { Crypto, CryptoDetailResponse } from '../models/crypto.model';
 import { CacheService } from './cache.service';
+import { API_CACHE_URL } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class PriceService {
-  private apiUrl = 'https://api.coingecko.com/api/v3/coins/markets';
-  private detailUrl = 'https://api.coingecko.com/api/v3/coins';
+  private marketsUrl = `${API_CACHE_URL}/providers/coingecko/markets`;
+  private coinUrl    = `${API_CACHE_URL}/providers/coingecko/coin`;
 
-  // Cache TTL in minutes
-  private readonly LIST_CACHE_TTL = 2; // 2 minutes for lists
+  // Cache TTL in minutes (Angular in-memory cache — second layer on top of Redis)
+  private readonly LIST_CACHE_TTL   = 2; // 2 minutes for lists
   private readonly DETAIL_CACHE_TTL = 5; // 5 minutes for details
-  private readonly CHART_CACHE_TTL = 5; // 5 minutes for charts
+  private readonly CHART_CACHE_TTL  = 5; // 5 minutes for charts
 
   constructor(private http: HttpClient, private cacheService: CacheService) {}
 
   getTopCryptos(vsCurrency: string = 'usd'): Observable<Crypto[]> {
     const cacheKey = `coins_list_top_${vsCurrency}`;
     const cached = this.cacheService.get<Crypto[]>(cacheKey);
-
-    if (cached) {
-      return of(cached);
-    }
+    if (cached) return of(cached);
 
     return this.http
       .get<Crypto[]>(
-        `${this.apiUrl}?vs_currency=${vsCurrency}&order=market_cap_desc&per_page=10&page=1`
+        `${this.marketsUrl}?vs_currency=${vsCurrency}&order=market_cap_desc&per_page=10&page=1`
       )
       .pipe(
         tap((data) => this.cacheService.set(cacheKey, data, this.LIST_CACHE_TTL)),
@@ -38,14 +36,11 @@ export class PriceService {
   getCryptoDetail(id: string, vsCurrency: string = 'usd'): Observable<Crypto> {
     const cacheKey = `coin_detail_${id}_${vsCurrency}`;
     const cached = this.cacheService.get<Crypto>(cacheKey);
-
-    if (cached) {
-      return of(cached);
-    }
+    if (cached) return of(cached);
 
     return this.http
       .get<CryptoDetailResponse>(
-        `${this.detailUrl}/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`
+        `${this.coinUrl}/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`
       )
       .pipe(
         map((response) => ({
@@ -72,13 +67,10 @@ export class PriceService {
   getHistoricalData(id: string, days: string, vsCurrency: string = 'usd'): Observable<any> {
     const cacheKey = `chart_${id}_${vsCurrency}_${days}`;
     const cached = this.cacheService.get<any>(cacheKey);
-
-    if (cached) {
-      return of(cached);
-    }
+    if (cached) return of(cached);
 
     return this.http
-      .get(`${this.detailUrl}/${id}/market_chart?vs_currency=${vsCurrency}&days=${days}`)
+      .get(`${this.coinUrl}/${id}/chart?vs_currency=${vsCurrency}&days=${days}`)
       .pipe(
         tap((data) => this.cacheService.set(cacheKey, data, this.CHART_CACHE_TTL)),
         shareReplay(1)
@@ -88,16 +80,11 @@ export class PriceService {
   getCoinsByIds(ids: string[], vsCurrency: string = 'usd'): Observable<Crypto[]> {
     const cacheKey = `coins_list_${vsCurrency}_${ids.join(',')}`;
     const cached = this.cacheService.get<Crypto[]>(cacheKey);
-
-    if (cached) {
-      return of(cached);
-    }
+    if (cached) return of(cached);
 
     return this.http
       .get<Crypto[]>(
-        `${this.apiUrl}?vs_currency=${vsCurrency}&ids=${ids.join(
-          ','
-        )}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+        `${this.marketsUrl}?vs_currency=${vsCurrency}&ids=${ids.join(',')}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
       )
       .pipe(
         tap((data) => this.cacheService.set(cacheKey, data, this.LIST_CACHE_TTL)),

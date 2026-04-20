@@ -1,7 +1,8 @@
 # setup.ps1 — Clone backend services and prepare config files from .env
 param(
     [string]$CppRestApiRepo = "https://github.com/lgarciac1603/cpp-rest-api.git",
-    [string]$FavoritesApiRepo = "https://github.com/lgarciac1603/favorites-api.git"
+    [string]$FavoritesApiRepo = "https://github.com/lgarciac1603/favorites-api.git",
+    [string]$CacheProxyApiRepo = "https://github.com/lgarciac1603/cache-proxy-api.git"
 )
 
 $ErrorActionPreference = "Stop"
@@ -54,6 +55,14 @@ if (-Not (Test-Path "backend/favorites-api/.git")) {
 } else {
     Write-Host "--> favorites-api already cloned, pulling latest..." -ForegroundColor Yellow
     git -C backend/favorites-api pull
+}
+
+if (-Not (Test-Path "backend/cache-proxy-api/.git")) {
+    Write-Host "--> Cloning cache-proxy-api..." -ForegroundColor Yellow
+    git clone $CacheProxyApiRepo backend/cache-proxy-api
+} else {
+    Write-Host "--> cache-proxy-api already cloned, pulling latest..." -ForegroundColor Yellow
+    git -C backend/cache-proxy-api pull
 }
 
 # ── Step 4: Write config files from .env ─────────────────────────────────────
@@ -109,6 +118,7 @@ Set-Content -Path $configLocalPath -Value $configLocalContent -Encoding UTF8
 Write-Host ""
 Write-Host "==> Setup complete." -ForegroundColor Green
 Write-Host ""
+Write-Host "Services configured: cpp-rest-api, favorites-api, cache-proxy-api" -ForegroundColor Cyan
 Write-Host "To start the full stack run:" -ForegroundColor Cyan
 Write-Host "  docker compose up --build"
 
