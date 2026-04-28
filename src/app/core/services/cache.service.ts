@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Observable, finalize, of, shareReplay, tap } from 'rxjs';
 
 interface CacheEntry<T> {
   data: T;
@@ -8,6 +9,7 @@ interface CacheEntry<T> {
 @Injectable({ providedIn: 'root' })
 export class CacheService {
   private cache = new Map<string, CacheEntry<any>>();
+  private inflightRequests = new Map<string, Observable<any>>();
 
   /**
    * Store data in cache with TTL (Time To Live)
@@ -49,10 +51,35 @@ export class CacheService {
   }
 
   /**
+   * Return cached data when available, otherwise execute and memoize the request.
+   */
+  getOrFetch<T>(key: string, ttlMinutes: number, fetcher: () => Observable<T>): Observable<T> {
+    const cached = this.get<T>(key);
+    if (cached !== null) {
+      return of(cached);
+    }
+
+    const inflight = this.inflightRequests.get(key);
+    if (inflight) {
+      return inflight as Observable<T>;
+    }
+
+    const request$ = fetcher().pipe(
+      tap((data) => this.set(key, data, ttlMinutes)),
+      finalize(() => this.inflightRequests.delete(key)),
+      shareReplay(1),
+    );
+
+    this.inflightRequests.set(key, request$);
+    return request$;
+  }
+
+  /**
    * Clear all cache
    */
   clear(): void {
     this.cache.clear();
+    this.inflightRequests.clear();
   }
 
   /**
@@ -61,6 +88,7 @@ export class CacheService {
    */
   clearByPrefix(prefix: string): void {
     const keysToDelete: string[] = [];
+    const inflightToDelete: string[] = [];
 
     this.cache.forEach((_, key) => {
       if (key.startsWith(prefix)) {
@@ -68,7 +96,14 @@ export class CacheService {
       }
     });
 
+    this.inflightRequests.forEach((_, key) => {
+      if (key.startsWith(prefix)) {
+        inflightToDelete.push(key);
+      }
+    });
+
     keysToDelete.forEach((key) => this.cache.delete(key));
+    inflightToDelete.forEach((key) => this.inflightRequests.delete(key));
   }
 
   /**

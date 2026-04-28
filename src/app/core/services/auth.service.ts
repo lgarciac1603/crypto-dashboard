@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { API_BASE_URL } from '../config/api.config';
+import { CacheService } from './cache.service';
 
 export interface User {
   id: string;
@@ -46,9 +47,14 @@ interface ValidateSessionResponse {
 export class AuthService {
   private readonly accessTokenKey = 'accessToken';
   private readonly refreshTokenKey = 'refreshToken';
+  private readonly authCachePrefix = 'auth_';
+  private readonly meCacheTtl = 5;
   private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private cacheService: CacheService,
+  ) {}
 
   login(credentials: { usernameOrEmail: string; password: string }): Observable<LoginResponse> {
     const body = new HttpParams()
@@ -146,6 +152,12 @@ export class AuthService {
       return of(null);
     }
 
+    const cachedUser = this.cacheService.get<User>(this.sessionValidationCacheKey());
+    if (cachedUser) {
+      this.currentUserSubject.next(cachedUser);
+      return of(cachedUser);
+    }
+
     return this.http.get<ValidateSessionResponse>(`${API_BASE_URL}/validate-session`).pipe(
       map((response) => {
         if (!response.valid || !response.user) {
@@ -156,6 +168,7 @@ export class AuthService {
       }),
       tap((user) => {
         if (user) {
+          this.cacheService.set(this.sessionValidationCacheKey(), user, this.meCacheTtl);
           this.currentUserSubject.next(user);
           return;
         }
@@ -170,9 +183,11 @@ export class AuthService {
   }
 
   getMe(): Observable<User> {
-    return this.http.get<MeResponse>(`${API_BASE_URL}/me`).pipe(
-      map((response) => this.mapUser(response)),
-      tap((user) => this.currentUserSubject.next(user)),
+    return this.cacheService.getOrFetch(this.meCacheKey(), this.meCacheTtl, () =>
+      this.http.get<MeResponse>(`${API_BASE_URL}/me`).pipe(
+        map((response) => this.mapUser(response)),
+        tap((user) => this.currentUserSubject.next(user)),
+      )
     );
   }
 
@@ -204,6 +219,8 @@ export class AuthService {
   }
 
   private persistTokens(accessToken: string, refreshToken?: string): void {
+    this.cacheService.clearByPrefix(this.authCachePrefix);
+    this.cacheService.clearByPrefix('favorites_');
     localStorage.setItem(this.accessTokenKey, accessToken);
 
     if (refreshToken) {
@@ -212,9 +229,24 @@ export class AuthService {
   }
 
   private clearSession(): void {
+    this.cacheService.clearByPrefix(this.authCachePrefix);
+    this.cacheService.clearByPrefix('favorites_');
     localStorage.removeItem(this.accessTokenKey);
     localStorage.removeItem(this.refreshTokenKey);
     this.currentUserSubject.next(null);
+  }
+
+  private meCacheKey(): string {
+    return `${this.authCachePrefix}me_${this.sessionCacheSuffix()}`;
+  }
+
+  private sessionValidationCacheKey(): string {
+    return `${this.authCachePrefix}validate_${this.sessionCacheSuffix()}`;
+  }
+
+  private sessionCacheSuffix(): string {
+    const token = this.getAccessToken();
+    return token ? token.slice(-16) : 'anonymous';
   }
 
   private mapUser(response: MeResponse): User {
