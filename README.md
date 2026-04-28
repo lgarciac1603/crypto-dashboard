@@ -93,6 +93,8 @@ bash setup.sh
 
 > On the first run, the setup script creates `.env` from `.env.example` and exits. Fill in your values, then re-run the script. On subsequent runs it clones `cpp-rest-api`, `favorites-api`, and `cache-proxy-api` into `backend/` and generates all required config files.
 
+> If you plan to work directly on `backend/cache-proxy-api` as a developer, install Cargo in your environment first (for example via Rust/rustup), then run `cargo fetch` inside `backend/cache-proxy-api` after the repository has been cloned by the setup script.
+
 ---
 
 ## Configuration
@@ -233,6 +235,8 @@ ng serve
 Open [http://localhost:4200/](http://localhost:4200/). The app hot-reloads on file changes.
 
 > For full functionality (login, favorites) the backend services must also be running. See the standalone instructions in each backend's README.
+
+> For local development of `backend/cache-proxy-api`, make sure Cargo is installed in your environment and run `cargo fetch` from `backend/cache-proxy-api` before working on that service.
 
 ### Code scaffolding
 
