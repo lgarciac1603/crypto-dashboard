@@ -32,7 +32,7 @@ Crypto Dashboard is an Angular 20 single-page application that displays real-tim
 
 - **[cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api)** — C++ REST API that handles user registration, authentication, and JWT session management.
 - **[favorites-api](https://github.com/lgarciac1603/favorites-api)** — Go microservice that manages each user's list of favorite cryptocurrencies.
-- **[cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api)** — Rust microservice that fronts market-data providers and will host response caching behind Redis.
+- **[cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api)** — Rust microservice that fronts market-data providers and caches eligible responses in Redis.
 
 Core features:
 
@@ -219,7 +219,7 @@ docker compose down -v
 2. `docker compose up` builds all images from source and connects them on a shared `app-network`.
 3. `cpp-rest-api` applies all database migrations automatically on startup.
 4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via Docker DNS ([http://cpp-rest-api:8080](http://cpp-rest-api:8080)).
-5. `cache-proxy-api` runs as the Rust market-data proxy, reading its route configuration from `backend/cache-proxy-api/src/config/proxy-config.json` mounted into the container at runtime.
+5. `cache-proxy-api` runs as the Rust market-data proxy, reading its route configuration from `backend/cache-proxy-api/src/config/proxy-config.json` mounted into the container at runtime and caching eligible `GET` responses in Redis.
 6. nginx proxies `/api-cache/` requests to `cache-proxy-api`, so the browser only talks to port `4200` for market data.
 
 ---
