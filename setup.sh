@@ -4,6 +4,7 @@ set -e
 
 CPP_REST_API_REPO="https://github.com/lgarciac1603/cpp-rest-api.git"
 FAVORITES_API_REPO="https://github.com/lgarciac1603/favorites-api.git"
+CACHE_PROXY_API_REPO="https://github.com/lgarciac1603/cache-proxy-api.git"
 
 # ── Step 1: Ensure .env exists ───────────────────────────────────────────────
 
@@ -59,6 +60,14 @@ else
   git -C backend/favorites-api pull
 fi
 
+if [ ! -d "backend/cache-proxy-api/.git" ]; then
+  echo "--> Cloning cache-proxy-api..."
+  git clone "$CACHE_PROXY_API_REPO" backend/cache-proxy-api
+else
+  echo "--> cache-proxy-api already cloned, pulling latest..."
+  git -C backend/cache-proxy-api pull
+fi
+
 # ── Step 4: Write config files from .env ─────────────────────────────────────
 
 # config.h — used by Docker (reads from env vars at runtime, safe to commit)
@@ -112,5 +121,6 @@ EOF
 echo ""
 echo "==> Setup complete."
 echo ""
+echo "Services configured: cpp-rest-api, favorites-api, cache-proxy-api"
 echo "To start the full stack run:"
 echo "  docker compose up --build"

@@ -1,0 +1,32 @@
+{
+  "folders": [
+	{
+		"path": "."
+	},
+	{
+		"path": "backend/cache-proxy-api"
+	},
+	{
+		"path": "backend/cpp-rest-api"
+	},
+	{
+		"path": "backend/favorites-api"
+	}
+],
+  "settings": {
+    "sqltools.connections": [
+      {
+        "ssh": "Disabled",
+        "previewLimit": 50,
+        "server": "localhost",
+        "port": 5432,
+        "askForPassword": true,
+        "driver": "PostgreSQL",
+        "name": "users",
+        "database": "apidb",
+        "username": "apiuser_test"
+      }
+    ],
+    "powershell.cwd": "crypto-dashboard"
+  }
+}

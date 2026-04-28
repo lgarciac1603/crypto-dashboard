@@ -36,5 +36,14 @@ function getFavoritesApiUrl(): string {
   return `${protocol}//${hostname}:8090`;
 }
 
+// Cache Proxy API always uses a relative path:
+//   - In dev (ng serve): Angular dev proxy forwards /api-cache → localhost:8070
+//   - In Docker: nginx proxies /api-cache → cache-proxy-api:8070 (internal)
+// This means no CORS issues in either mode and the service is never directly exposed.
+function getCacheProxyUrl(): string {
+  return '/api-cache';
+}
+
 export const API_BASE_URL = getApiBaseUrl();
 export const API_FAVORITES_URL = getFavoritesApiUrl();
+export const API_CACHE_URL = getCacheProxyUrl();

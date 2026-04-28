@@ -14,6 +14,7 @@ services:
     depends_on:
       - cpp-rest-api
       - favorites-api
+      - cache-proxy-api
     networks:
       - app-network
     restart: unless-stopped
@@ -81,6 +82,40 @@ services:
       - app-network
     restart: unless-stopped
 
+  # Cache Proxy Microservice - Rust API
+  cache-proxy-api:
+    build:
+      context: ./backend/cache-proxy-api
+      dockerfile: Dockerfile
+    container_name: cache-proxy-api
+    environment:
+      PORT: '8070'
+      REDIS_URL: 'redis://redis:6379'
+      PROXY_CONFIG_PATH: '/app/src/config/proxy-config.json'
+    volumes:
+      - ./backend/cache-proxy-api/src/config:/app/src/config:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Redis - Cache store for cache-proxy-api
+  redis:
+    image: redis:7-alpine
+    container_name: app-redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # Database
   postgres:
     image: postgres:16-alpine
@@ -110,3 +145,4 @@ networks:
 # Volumes
 volumes:
   postgres_data:
+  redis_data:
