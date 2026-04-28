@@ -47,18 +47,18 @@ Core features:
 
 ## Technology Stack
 
-| Component      | Technology                                             | Version |
-| -------------- | ------------------------------------------------------ | ------- |
-| Language       | TypeScript                                             | 5.x     |
-| Framework      | Angular                                                | 20      |
-| Styles         | SCSS                                                   | —       |
-| HTTP Client    | Angular `HttpClient` + RxJS                            | —       |
-| Web Server     | nginx                                                  | alpine  |
-| Container      | Docker / Docker Compose                                | 26+     |
-| Crypto Data    | [CoinGecko API](https://www.coingecko.com/en/api)      | v3      |
-| Auth Backend   | [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++) | — |
-| Favorites API  | [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go) | — |
-| Cache Proxy    | [cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api) (Rust) | — |
+| Component     | Technology                                                                | Version |
+| ------------- | ------------------------------------------------------------------------- | ------- |
+| Language      | TypeScript                                                                | 5.x     |
+| Framework     | Angular                                                                   | 20      |
+| Styles        | SCSS                                                                      | —       |
+| HTTP Client   | Angular `HttpClient` + RxJS                                               | —       |
+| Web Server    | nginx                                                                     | alpine  |
+| Container     | Docker / Docker Compose                                                   | 26+     |
+| Crypto Data   | [CoinGecko API](https://www.coingecko.com/en/api)                         | v3      |
+| Auth Backend  | [cpp-rest-api](https://github.com/lgarciac1603/cpp-rest-api) (C++)        | —       |
+| Favorites API | [favorites-api](https://github.com/lgarciac1603/favorites-api) (Go)       | —       |
+| Cache Proxy   | [cache-proxy-api](https://github.com/lgarciac1603/cache-proxy-api) (Rust) | —       |
 
 ---
 
@@ -103,20 +103,21 @@ All backend configuration is driven by a single `.env` file at the root of this 
 cp .env.example .env
 ```
 
-| Variable            | Default                 | Description                              |
-| ------------------- | ----------------------- | ---------------------------------------- |
-| `JWT_SECRET`        | `dev-secret-key`        | Secret used to sign and verify JWT tokens |
-| `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin for both backend APIs |
-| `DB_NAME`           | `apidb`                 | PostgreSQL database name                 |
-| `DB_USER`           | `apiuser_test`          | PostgreSQL user                          |
-| `DB_PASS`           | `apipass_test`          | PostgreSQL password                      |
+| Variable            | Default                 | Description                                                                   |
+| ------------------- | ----------------------- | ----------------------------------------------------------------------------- |
+| `JWT_SECRET`        | `dev-secret-key`        | Secret used to sign and verify JWT tokens                                     |
+| `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin for both backend APIs                                     |
+| `DB_NAME`           | `apidb`                 | PostgreSQL database name                                                      |
+| `DB_USER`           | `apiuser_test`          | PostgreSQL user                                                               |
+| `DB_PASS`           | `apipass_test`          | PostgreSQL password                                                           |
 | `COINGECKO_API_KEY` | empty                   | Optional CoinGecko API key for setups that use authenticated CoinGecko access |
 
 > Always use a strong, random `JWT_SECRET` in any non-local environment.
-
+>
 > `COINGECKO_API_KEY` is optional. The current stack works without it, but keeping it in `.env` is useful if `cache-proxy-api` or related integrations later need authenticated CoinGecko access.
 
 When the setup script runs, it writes these values into:
+
 - `backend/cpp-rest-api/src/config/config.h` — runtime config for the Docker build (reads env vars).
 - `backend/cpp-rest-api/src/config/config.local.h` — hardcoded config for native builds.
 
@@ -124,7 +125,7 @@ When the setup script runs, it writes these values into:
 
 ## Project Structure
 
-```
+```txt
 crypto-dashboard/
 ├── backend/                        # Git-ignored; populated by setup scripts
 │   ├── cpp-rest-api/               # C++ auth & user management backend
@@ -162,7 +163,7 @@ This is the recommended way to run the entire application. A single command buil
 
 ### Architecture
 
-```
+```txt
 crypto-dashboard (Angular / nginx)   :4200
         |
         +-- cpp-rest-api (C++)        :8080   ← user auth & sessions
@@ -187,12 +188,12 @@ docker compose up --build
 
 Access the services:
 
-| Service       | URL                   |
-| ------------- | --------------------- |
-| Frontend      | http://localhost:4200 |
-| Backend API   | http://localhost:8080 |
-| Favorites API | http://localhost:8090 |
-| Cache Proxy   | http://localhost:4200/api-cache |
+| Service       | URL                                                                |
+| ------------- | ------------------------------------------------------------------ |
+| Frontend      | [http://localhost:4200](http://localhost:4200)                     |
+| Backend API   | [http://localhost:8080](http://localhost:8080)                     |
+| Favorites API | [http://localhost:8090](http://localhost:8090)                     |
+| Cache Proxy   | [http://localhost:4200/api-cache](http://localhost:4200/api-cache) |
 
 ### Useful commands
 
@@ -215,7 +216,7 @@ docker compose down -v
 1. `setup.ps1` / `setup.sh` clones `cpp-rest-api`, `favorites-api`, and `cache-proxy-api` into `backend/` and generates the C++ config headers from your `.env`. The `backend/` folder is git-ignored and never committed.
 2. `docker compose up` builds all images from source and connects them on a shared `app-network`.
 3. `cpp-rest-api` applies all database migrations automatically on startup.
-4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via Docker DNS (`http://cpp-rest-api:8080`).
+4. `favorites-api` connects to the same PostgreSQL instance and delegates JWT validation to `cpp-rest-api` via Docker DNS ([http://cpp-rest-api:8080](http://cpp-rest-api:8080)).
 5. `cache-proxy-api` runs as the Rust market-data proxy, reading its route configuration from `backend/cache-proxy-api/src/config/proxy-config.json` mounted into the container at runtime.
 6. nginx proxies `/api-cache/` requests to `cache-proxy-api`, so the browser only talks to port `4200` for market data.
 
@@ -229,7 +230,7 @@ To run only the Angular dev server (without Docker):
 ng serve
 ```
 
-Open `http://localhost:4200/`. The app hot-reloads on file changes.
+Open [http://localhost:4200/](http://localhost:4200/). The app hot-reloads on file changes.
 
 > For full functionality (login, favorites) the backend services must also be running. See the standalone instructions in each backend's README.
 
@@ -268,11 +269,11 @@ ng test
 
 The frontend integrates with three backend APIs/services:
 
-| Service       | Base URL              | Purpose                         |
-| ------------- | --------------------- | ------------------------------- |
-| cpp-rest-api  | `http://localhost:8080` | User auth, sessions, JWT        |
-| favorites-api | `http://localhost:8090` | Add / remove / list favorites   |
-| cache-proxy-api | `/api-cache`         | Market-data proxy + cache entry point |
+| Service         | Base URL                                       | Purpose                               |
+| --------------- | ---------------------------------------------- | ------------------------------------- |
+| cpp-rest-api    | [http://localhost:8080](http://localhost:8080) | User auth, sessions, JWT              |
+| favorites-api   | [http://localhost:8090](http://localhost:8090) | Add / remove / list favorites         |
+| cache-proxy-api | `/api-cache`                                   | Market-data proxy + cache entry point |
 
 CoinGecko remains an optional upstream dependency behind `cache-proxy-api`. In the current setup, the dashboard talks to `/api-cache`, and the proxy decides whether or not it needs CoinGecko-specific configuration such as an API key.
 
@@ -284,15 +285,15 @@ The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>`
 
 ### Color Palette
 
-| Token           | Value       | Usage                        |
-| --------------- | ----------- | ---------------------------- |
-| Background      | `#0a0a0f`   | Page background              |
-| Card Background | `#12121a`   | Card and panel surfaces      |
-| Neon Cyan       | `#00f3ff`   | Primary accent, highlights   |
-| Neon Magenta    | `#ff00ff`   | Secondary accent             |
-| Neon Green      | `#39ff14`   | Positive price changes       |
-| Text Primary    | `#e8e8ff`   | Main readable text           |
-| Text Secondary  | `#9b9bb5`   | Labels, subtitles            |
+| Token           | Value     | Usage                      |
+| --------------- | --------- | -------------------------- |
+| Background      | `#0a0a0f` | Page background            |
+| Card Background | `#12121a` | Card and panel surfaces    |
+| Neon Cyan       | `#00f3ff` | Primary accent, highlights |
+| Neon Magenta    | `#ff00ff` | Secondary accent           |
+| Neon Green      | `#39ff14` | Positive price changes     |
+| Text Primary    | `#e8e8ff` | Main readable text         |
+| Text Secondary  | `#9b9bb5` | Labels, subtitles          |
 
 ---
 
