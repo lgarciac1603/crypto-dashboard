@@ -8,8 +8,8 @@ import { API_CACHE_URL } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class PriceService {
-  private marketsUrl = `${API_CACHE_URL}/providers/coingecko/markets`;
-  private coinUrl    = `${API_CACHE_URL}/providers/coingecko/coin`;
+  private marketsUrl = `${API_CACHE_URL}/providers/coingecko/coins/markets`;
+  private coinUrl    = `${API_CACHE_URL}/providers/coingecko/coins`;
 
   // Cache TTL in minutes (Angular in-memory cache — second layer on top of Redis)
   private readonly LIST_CACHE_TTL   = 2; // 2 minutes for lists
@@ -58,7 +58,7 @@ export class PriceService {
   getHistoricalData(id: string, days: string, vsCurrency: string = 'usd'): Observable<any> {
     const cacheKey = `chart_${id}_${vsCurrency}_${days}`;
     return this.cacheService.getOrFetch(cacheKey, this.CHART_CACHE_TTL, () =>
-      this.http.get(`${this.coinUrl}/${id}/chart?vs_currency=${vsCurrency}&days=${days}`)
+      this.http.get(`${this.coinUrl}/${id}/market_chart?vs_currency=${vsCurrency}&days=${days}`)
     );
   }
 

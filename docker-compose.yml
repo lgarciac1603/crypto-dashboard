@@ -88,6 +88,8 @@ services:
       context: ./backend/cache-proxy-api
       dockerfile: Dockerfile
     container_name: cache-proxy-api
+    ports:
+      - '8070:8070'
     environment:
       PORT: '8070'
       REDIS_URL: 'redis://redis:6379'

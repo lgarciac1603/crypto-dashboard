@@ -222,6 +222,22 @@ docker compose down -v
 5. `cache-proxy-api` runs as the Rust market-data proxy, reading its route configuration from `backend/cache-proxy-api/src/config/proxy-config.json` mounted into the container at runtime and caching eligible `GET` responses in Redis.
 6. nginx proxies `/api-cache/` requests to `cache-proxy-api`, so the browser only talks to port `4200` for market data.
 
+### Current cache flow
+
+The application currently uses **two cache layers** for selected `GET` requests:
+
+1. **Angular in-memory cache** via `CacheService.getOrFetch(...)`
+2. **Redis cache in `cache-proxy-api`** for eligible proxied `GET` requests
+
+For CoinGecko-backed market data, the effective flow is:
+
+1. The frontend checks the in-memory cache first.
+2. If there is no valid frontend cache entry, the browser calls `/api-cache/...`.
+3. `cache-proxy-api` checks Redis.
+4. If Redis misses, the proxy calls the upstream provider (for example CoinGecko), stores the successful response, and returns it.
+
+This means the app can avoid both a browser-side request and an upstream provider request when data is already cached.
+
 ---
 
 ## Running Locally
@@ -232,11 +248,36 @@ To run only the Angular dev server (without Docker):
 ng serve
 ```
 
-Open [http://localhost:4200/](http://localhost:4200/). The app hot-reloads on file changes.
+Open [http://localhost:4203/](http://localhost:4203/). The app hot-reloads on file changes.
 
 > For full functionality (login, favorites) the backend services must also be running. See the standalone instructions in each backend's README.
 >
 > For local development of `backend/cache-proxy-api`, make sure Cargo is installed in your environment and run `cargo fetch` from `backend/cache-proxy-api` before working on that service.
+
+### Frontend dev mode with Docker backends
+
+If you want Angular hot reload while still using the Dockerized backend stack, run only the backend services with Docker Compose:
+
+```bash
+docker compose up --build postgres redis cpp-rest-api favorites-api cache-proxy-api
+```
+
+Then start the Angular dev server in a separate terminal:
+
+```bash
+ng serve --proxy-config proxy.conf.json
+```
+
+In this mode:
+
+- the frontend runs in Angular development mode on [http://localhost:4203](http://localhost:4203)
+- `/api-backend` is proxied to `cpp-rest-api`
+- `/api-favorites` is proxied to `favorites-api`
+- `/api-cache` is proxied to `cache-proxy-api`
+
+> Running the Angular dev server on `4203` avoids conflicting with the Docker `crypto-dashboard` service on `4200`.
+>
+> In this setup, `cache-proxy-api` is also published on `http://localhost:8070` so the Angular dev proxy can forward `/api-cache` requests from the host machine.
 
 ### Code scaffolding
 
@@ -282,6 +323,28 @@ The frontend integrates with three backend APIs/services:
 CoinGecko remains an optional upstream dependency behind `cache-proxy-api`. In the current setup, the dashboard talks to `/api-cache`, and the proxy decides whether or not it needs CoinGecko-specific configuration such as an API key.
 
 The `AuthInterceptor` automatically attaches the `Authorization: Bearer <token>` header to all requests targeting either backend service that requires auth.
+
+### Requests currently cached
+
+| Layer | Request / flow | Cached? | Notes |
+| --- | --- | --- | --- |
+| Frontend | `PriceService.getTopCryptos()` | Yes | In-memory cache, TTL 2 minutes |
+| Frontend | `PriceService.getCryptoDetail()` | Yes | In-memory cache, TTL 5 minutes |
+| Frontend | `PriceService.getHistoricalData()` | Yes | In-memory cache, TTL 5 minutes |
+| Frontend | `PriceService.getCoinsByIds()` | Yes | In-memory cache, TTL 2 minutes |
+| Frontend | `AuthService.validateSession()` | Yes | In-memory cache keyed by current access token, TTL 5 minutes |
+| Frontend | `AuthService.getMe()` | Yes | In-memory cache keyed by current access token, TTL 5 minutes |
+| Frontend | `FavoritesService.getFavorites()` | Yes | In-memory cache keyed by current access token, TTL 2 minutes |
+| Backend Redis | `/api-cache/providers/coingecko/*` `GET` routes | Yes | Redis cache enabled through `cache_ttl_seconds: 60` in `proxy-config.json` |
+
+### Requests not cached
+
+- Frontend auth mutations: login, register, logout, token refresh
+- Favorites mutations: add favorite, remove favorite
+- Any non-`GET` request in `cache-proxy-api`
+- Proxy routes without `cache_ttl_seconds` in `backend/cache-proxy-api/src/config/proxy-config.json`
+
+Today that means Redis caching is enabled for the CoinGecko proxy route, but not for the internal `cpp-rest-api` or `favorites-api` proxy routes.
 
 ---
 
